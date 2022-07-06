@@ -19,6 +19,6 @@ install(TARGETS raytracer DESTINATION .)
 add_executable(tests
   tests.cpp)
 target_link_libraries(tests
-  ${GLFW_LIBRARIES}
+  ${GLFW_LIBRARIES} ${FRAMEWORK_NAME} ${LIBRARIES}
   )
 
