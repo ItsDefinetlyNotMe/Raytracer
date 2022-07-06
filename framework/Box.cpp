@@ -21,6 +21,7 @@ std::ostream& Box::print(std::ostream& os) const{
 
 }
 
-Hitpoint Box::intersect(Ray const& ray,float& t) {
-	ray.origin.x + ray.direction.x * t = max_.x - min_.x
+Hitpoint Box::intersect(Ray const& ray) const{
+	return Hitpoint{};
+	//ray.origin.x + ray.direction.x * t = min_.x 
 }

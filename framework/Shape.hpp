@@ -1,12 +1,12 @@
 //composit patern
 #ifndef SHAPE_HPP
 #define SHAPE_HPP
-#include <Hitpoint.hpp>
-#include <Ray.hpp>
+#include "Hitpoint.hpp"
+#include "Ray.hpp"
 #include <glm/vec3.hpp>
 #include <cmath>
 #include <string>
-#include <color.hpp>
+#include "color.hpp"
 class Shape {
 private: 
 	std::string name_{""};
@@ -22,7 +22,7 @@ public:
 	virtual std::ostream& print(std::ostream& os) const;
 	Color get_color() const;
 	std::string get_name() const;
-	virtual Hitpoint intersect(Ray const& ray, float& t) = 0;
+	virtual Hitpoint intersect(Ray const& ray) const = 0;
 };
 std::ostream& operator<<(std::ostream& os, Shape const& s);
 #endif // ! SHAPE_HPP

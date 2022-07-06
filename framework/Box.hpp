@@ -13,6 +13,6 @@ public:
 	float area() const;
 	float volume() const;
 	std::ostream& print(std::ostream& os) const override;
-	Hitpoint intersect(Ray const& ray, float& t) = 0;
+	Hitpoint intersect(Ray const& ray) const override;
 };
 //std::ostream& operator<<(std::ostream& os, Box const& b);
