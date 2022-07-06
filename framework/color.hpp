@@ -55,5 +55,5 @@ struct Color
   float g;
   float b;
 };
-
+bool operator==(Color const& c1, Color const& c2);
 #endif //#define BUW_COLOR_HPP

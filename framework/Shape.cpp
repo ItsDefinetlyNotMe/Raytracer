@@ -1,12 +1,22 @@
 #include "Shape.hpp"
-Shape::Shape(Color c, std::string s):color_{ c }, name_{ s }{};
+Shape::Shape(std::string const& s, Color const& c): name_{ s }, color_{ c }{};
 Shape::Shape(){};
 
+Shape::~Shape() {
+	std::cout << "Destruktor Shape" << std::endl;
+};
+
+Color Shape::get_color() const {
+	return color_;
+}
+std::string Shape::get_name() const {
+	return name_;
+}
+
+
 std::ostream& Shape::print(std::ostream& os) const{
-	os << "Name: " << name_ << " Color: " << color_;
-	return os;
+	return os << "Name: " << name_ << ", Color: " << color_.r << ", " << color_.g << ", " << color_.b << " ";
 }
 std::ostream& operator<<(std::ostream& os, Shape const& s) {
-	s.print(os);
-	return os;
+	return s.print(os);
 }
