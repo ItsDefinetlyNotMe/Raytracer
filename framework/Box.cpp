@@ -22,6 +22,7 @@ std::ostream& Box::print(std::ostream& os) const{
 }
 
 Hitpoint Box::intersect(Ray const& ray) const{
+
 	//vlt eleganter ?
 	bool inside = false;
 	if (ray.origin.x > min_.x && ray.origin.x < max_.x && ray.origin.y > min_.y && ray.origin.y < max_.y && ray.origin.z > min_.z && ray.origin.z < max_.z) {
@@ -40,34 +41,36 @@ Hitpoint Box::intersect(Ray const& ray) const{
 		if ((temp.z > min_.z && temp.z < max_.z) && (temp.y > min_.y && temp.y < max_.y) && t >= 0) {
 			return  Hitpoint{ true,t,Shape::get_name(),Shape::get_color(),temp,ray.direction };
 		}
+	}
 
-		if (ray.direction.y < 0 != inside) {
-			float t = (min_.y - ray.origin.y) / ray.direction.y;
-			glm::vec3 temp{ ray.origin + ray.direction * t };
-			if ((temp.z > min_.z && temp.z < max_.z) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-				return  Hitpoint{ true,t,Shape::get_name(),Shape::get_color(),temp,ray.direction };
-			}
+	if (ray.direction.y < 0 != inside) {
+		float t = (min_.y - ray.origin.y) / ray.direction.y;
+		glm::vec3 temp{ ray.origin + ray.direction * t };
+		if ((temp.z > min_.z && temp.z < max_.z) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
+			return  Hitpoint{ true,t,Shape::get_name(),Shape::get_color(),temp,ray.direction };
 		}
-		else if (ray.direction.y > 0 != inside) {
-			float t = (max_.y - ray.origin.y) / ray.direction.y;
-			glm::vec3 temp{ ray.origin + ray.direction * t };
-			if ((temp.z > min_.z && temp.z < max_.z) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-				return  Hitpoint{ true,t,Shape::get_name(),Shape::get_color(),temp,ray.direction };
-			}
+	}
+	else if (ray.direction.y > 0 != inside) {
+		float t = (max_.y - ray.origin.y) / ray.direction.y;
+		glm::vec3 temp{ ray.origin + ray.direction * t };
+		if ((temp.z > min_.z && temp.z < max_.z) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
+			return  Hitpoint{ true,t,Shape::get_name(),Shape::get_color(),temp,ray.direction };
 		}
+	}
 
-		if (ray.direction.z < 0 != inside) {
-			float t = (min_.z - ray.origin.z) / ray.direction.z;
-			glm::vec3 temp{ ray.origin + ray.direction * t };
-			if ((temp.y > min_.y && temp.y < max_.y) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-				return  Hitpoint{ true,t,Shape::get_name(),Shape::get_color(),temp,ray.direction };
-			}
+	if (ray.direction.z < 0 != inside) {
+		float t = (min_.z - ray.origin.z) / ray.direction.z;
+		glm::vec3 temp{ ray.origin + ray.direction * t };
+		if ((temp.y > min_.y && temp.y < max_.y) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
+			return  Hitpoint{ true,t,Shape::get_name(),Shape::get_color(),temp,ray.direction };
 		}
-		else if (ray.direction.z > 0 != inside) {
-			float t = (max_.z - ray.origin.z) / ray.direction.z;
-			glm::vec3 temp{ ray.origin + ray.direction * t };
-			if ((temp.y > min_.y && temp.y < max_.y) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-				return  Hitpoint{ true,t,Shape::get_name(),Shape::get_color(),temp,ray.direction };
-			}
+	}
+	else if (ray.direction.z > 0 != inside) {
+		float t = (max_.z - ray.origin.z) / ray.direction.z;
+		glm::vec3 temp{ ray.origin + ray.direction * t };
+		if ((temp.y > min_.y && temp.y < max_.y) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
+			return  Hitpoint{ true,t,Shape::get_name(),Shape::get_color(),temp,ray.direction };
 		}
+	}
+		return Hitpoint{};
 }
