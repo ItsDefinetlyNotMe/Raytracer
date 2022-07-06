@@ -130,11 +130,11 @@ TEST_CASE("Destructor", " [Destructor] "){
 TEST_CASE("intersect_ray_box", " [Box_intersect] ") {
 	Ray r1 {{0.0f, 0.0f, 0.0f}, glm::normalize(glm::vec3{1.0f, 0.0f, 0.0f})};
 	Ray r2 {{12.3f, 7.0f, -4.0f}, glm::normalize(glm::vec3{1.0f, 1.0f, 0.0f})};
-	Ray r3 {{-2.0f, 0.32f, 0.0f}, glm::normalize(glm::vec3{1.0f, -2.0f, 1.0f})};
+	Ray r3 {{-2.0f, 0.12f, 0.0f}, glm::normalize(glm::vec3{1.0f, -2.0f, 1.0f})};
 
 	Box b1 {{1.0f, -2.0f, -2.0f}, {3.0f, 2.0f, 2.0f}};
 	Box b2 {{18.4f, 2.0f, -8.0f}, {19.0f, 20.0f, 3.0f}};
-	Box b3 {{13.0f, -30.2f, 10.0f}, {20.3f, -20.34f, 15.0f}};
+	Box b3 {{13.0f, -30.2f, 10.0f}, {20.3f, -20.34f, 15.4f}};
 
 	REQUIRE(b1.intersect(r1).hit == true);
 	REQUIRE(b1.intersect(r2).hit == false);
