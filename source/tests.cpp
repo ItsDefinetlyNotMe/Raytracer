@@ -151,6 +151,27 @@ TEST_CASE("intersect_ray_box", " [Box_intersect] ") {
 }//
 TEST_CASE("SDF", " [material-sdf] ") {
 	std::vector<std::shared_ptr<Material>> a{ sdf_reader(".\\test.sdf") };
-	for (auto x : a)
-		std::cout << *x << std::endl;
+	Material red{ "red",{1.0,0.0,0.0},{1.0,0.0,0.0},{1.0,0.0,0.0},20.0f };
+	Material green{ "green",{0.0,1.0,0.0},{0.0,1.0,0.0},{0.0,1.0,0.0},50.0f };
+	Material blue{ "blue", {0.0,0.0,1.0},{0.0,0.0,1.0},{0.0,0.0,1.0},10.0f };
+	
+	REQUIRE(a[0]->name == red.name );
+	REQUIRE(a[0]->m == red.m );
+	REQUIRE(a[0]->ka == red.ka );
+	REQUIRE(a[0]->kd == red.kd);
+	REQUIRE(a[0]->ks == red.ks);
+
+	REQUIRE(a[0]->name == green.name);
+	REQUIRE(a[0]->m == green.m);
+	REQUIRE(a[0]->ka == green.ka);
+	REQUIRE(a[0]->kd == green.kd);
+	REQUIRE(a[0]->ks == green.ks);
+
+	REQUIRE(a[0]->name == blue.name);
+	REQUIRE(a[0]->m == blue.m);
+	REQUIRE(a[0]->ka == blue.ka);
+	REQUIRE(a[0]->kd == blue.kd);
+	REQUIRE(a[0]->ks == blue.ks);
+
+
 };
