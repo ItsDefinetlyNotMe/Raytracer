@@ -3,6 +3,7 @@
 #include "Shape.hpp"
 #include "Sphere.hpp"
 #include "Box.hpp"
+#include "SDFreader.hpp"
 #include <iostream>
 
 # include <glm/glm.hpp>
@@ -147,4 +148,9 @@ TEST_CASE("intersect_ray_box", " [Box_intersect] ") {
 	REQUIRE(b3.intersect(r1).hit == false);
 	REQUIRE(b3.intersect(r2).hit == false);
 	REQUIRE(b3.intersect(r3).hit == true);
-}
+}//
+TEST_CASE("SDF", " [material-sdf] ") {
+	std::vector<std::shared_ptr<Material>> a{ sdf_reader(".\\test.sdf") };
+	for (auto x : a)
+		std::cout << *x << std::endl;
+};
