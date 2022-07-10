@@ -5,7 +5,7 @@
 #include "Box.hpp"
 #include "SDFreader.hpp"
 #include <iostream>
-
+#include "material_container.hpp"
 # include <glm/glm.hpp>
 # include <glm/gtx/intersect.hpp>
 
@@ -128,7 +128,7 @@ TEST_CASE("Destructor", " [Destructor] "){
 	delete s2;
 }
 
-TEST_CASE("intersect_ray_box", " [Box_intersect] ") {
+TEST_CASE("intersect_ray_box", "[Box_intersect]") {
 	Ray r1 {{0.0f, 0.0f, 0.0f}, glm::normalize(glm::vec3{1.0f, 0.0f, 0.0f})};
 	Ray r2 {{12.3f, 7.0f, -4.0f}, glm::normalize(glm::vec3{1.0f, 1.0f, 0.0f})};
 	Ray r3 {{-2.0f, 0.12f, 0.0f}, glm::normalize(glm::vec3{1.0f, -2.0f, 1.0f})};
@@ -161,17 +161,45 @@ TEST_CASE("SDF", " [material-sdf] ") {
 	REQUIRE(a[0]->kd == red.kd);
 	REQUIRE(a[0]->ks == red.ks);
 
-	REQUIRE(a[0]->name == green.name);
-	REQUIRE(a[0]->m == green.m);
-	REQUIRE(a[0]->ka == green.ka);
-	REQUIRE(a[0]->kd == green.kd);
-	REQUIRE(a[0]->ks == green.ks);
+	REQUIRE(a[1]->name == green.name);
+	REQUIRE(a[1]->m == green.m);
+	REQUIRE(a[1]->ka == green.ka);
+	REQUIRE(a[1]->kd == green.kd);
+	REQUIRE(a[1]->ks == green.ks);
 
-	REQUIRE(a[0]->name == blue.name);
-	REQUIRE(a[0]->m == blue.m);
-	REQUIRE(a[0]->ka == blue.ka);
-	REQUIRE(a[0]->kd == blue.kd);
-	REQUIRE(a[0]->ks == blue.ks);
+	REQUIRE(a[2]->name == blue.name);
+	REQUIRE(a[2]->m == blue.m);
+	REQUIRE(a[2]->ka == blue.ka);
+	REQUIRE(a[2]->kd == blue.kd);
+	REQUIRE(a[2]->ks == blue.ks);
 
 
 };
+TEST_CASE("find_method","[find]") {
+	auto red = std::make_shared<Material>(Material{"red",{1.0,0.0,0.0},{1.0,0.0,0.0},{1.0,0.0,0.0},20.0f });
+	auto green = std::make_shared<Material>(Material{ "green",{0.0,1.0,0.0},{0.0,1.0,0.0},{0.0,1.0,0.0},50.0f });
+	auto blue = std::make_shared<Material>(Material{ "blue", {0.0,0.0,1.0},{0.0,0.0,1.0},{0.0,0.0,1.0},10.0f });
+	
+	std::vector<std::shared_ptr<Material>>material_vec{red,blue,green};
+	std::set<std::shared_ptr<Material>> material_set{red,green,blue};
+	std::map<std::string,std::shared_ptr<Material>> material_map;
+	material_map["red"] = red;
+	material_map["green"] = green;
+	material_map["blue"] = blue;
+
+	auto red_v = find(material_vec, "red");
+	auto red_m = find(material_map, "red");
+	auto red_s = find(material_set, "red");
+
+	REQUIRE(red_v == red);
+	REQUIRE(red_s == red);
+	REQUIRE(red_m == red);
+
+	auto null_v = find(material_vec, "null");
+	auto null_m = find(material_map, "null");
+	auto null_s = find(material_set, "null");
+
+	REQUIRE(null_v == nullptr);
+	REQUIRE(null_s == nullptr);
+	REQUIRE(null_m == nullptr);
+}
