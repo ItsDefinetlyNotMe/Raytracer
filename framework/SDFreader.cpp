@@ -34,7 +34,7 @@ std::vector<std::shared_ptr<Material>> sdf_reader(std::string path) {
                 iss >> ka.r >> ka.g >> ka.b;
                 iss >> kd.r >> kd.g >> kd.b;
                 iss >> ks.r >> ks.g >> ks.b;
-                iss >> m;// Specular Reflection Constant
+                iss >> m;
 
                 materials.push_back(std::make_shared<Material>(Material{ name,ka,kd,ks,m }));
             }
