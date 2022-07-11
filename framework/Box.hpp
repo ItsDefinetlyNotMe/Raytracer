@@ -6,7 +6,7 @@ private:
 	glm::vec3 max_;
 public:
 	Box(glm::vec3 const& mi,glm::vec3 const& ma);
-	Box(std::string const& n, Color const& c, glm::vec3 const& mi, glm::vec3 const& ma);
+	Box(std::string const& n, std::shared_ptr<Material> const& mat, glm::vec3 const& mi, glm::vec3 const& ma);
 	~Box();
 
 

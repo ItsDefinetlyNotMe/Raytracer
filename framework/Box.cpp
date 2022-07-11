@@ -4,7 +4,7 @@ Box::Box(glm::vec3 const& mi, glm::vec3 const& ma):min_{ mi }, max_{ ma }{
 	if (min_.y > max_.y) std::swap(min_.y, max_.y);
 	if (min_.z > max_.z) std::swap(min_.x, max_.x);
 }
-Box::Box(std::string const& n, Color const& c, glm::vec3 const& mi, glm::vec3 const& ma) : Shape{ n,c }, min_{ mi }, max_{ ma } {}
+Box::Box(std::string const& n, std::shared_ptr<Material> const& mat, glm::vec3 const& mi, glm::vec3 const& ma) : Shape{ n,mat }, min_{ mi }, max_{ ma } {}
 Box::~Box(){ std::cout << "Destruktor Box" << std::endl; }
 
 float Box::area() const{
@@ -32,14 +32,14 @@ Hitpoint Box::intersect(Ray const& ray) const{
 		float t = (min_.x - ray.origin.x) / ray.direction.x;
 		glm::vec3 temp{ ray.origin + ray.direction * t };
 		if ((temp.z > min_.z && temp.z < max_.z) && (temp.y > min_.y && temp.y < max_.y) && t >= 0) {
-			return  Hitpoint{ true,t,Shape::get_name(),Shape::get_color(),temp,ray.direction };
+			return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
 		}
 	}
 	else if (ray.direction.x > 0 != inside) {
 		float t = (max_.x - ray.origin.x) / ray.direction.x;
 		glm::vec3 temp{ ray.origin + ray.direction * t };
 		if ((temp.z > min_.z && temp.z < max_.z) && (temp.y > min_.y && temp.y < max_.y) && t >= 0) {
-			return  Hitpoint{ true,t,Shape::get_name(),Shape::get_color(),temp,ray.direction };
+			return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
 		}
 	}
 
@@ -47,14 +47,14 @@ Hitpoint Box::intersect(Ray const& ray) const{
 		float t = (min_.y - ray.origin.y) / ray.direction.y;
 		glm::vec3 temp{ ray.origin + ray.direction * t };
 		if ((temp.z > min_.z && temp.z < max_.z) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-			return  Hitpoint{ true,t,Shape::get_name(),Shape::get_color(),temp,ray.direction };
+			return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
 		}
 	}
 	else if (ray.direction.y > 0 != inside) {
 		float t = (max_.y - ray.origin.y) / ray.direction.y;
 		glm::vec3 temp{ ray.origin + ray.direction * t };
 		if ((temp.z > min_.z && temp.z < max_.z) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-			return  Hitpoint{ true,t,Shape::get_name(),Shape::get_color(),temp,ray.direction };
+			return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
 		}
 	}
 
@@ -62,14 +62,14 @@ Hitpoint Box::intersect(Ray const& ray) const{
 		float t = (min_.z - ray.origin.z) / ray.direction.z;
 		glm::vec3 temp{ ray.origin + ray.direction * t };
 		if ((temp.y > min_.y && temp.y < max_.y) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-			return  Hitpoint{ true,t,Shape::get_name(),Shape::get_color(),temp,ray.direction };
+			return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
 		}
 	}
 	else if (ray.direction.z > 0 != inside) {
 		float t = (max_.z - ray.origin.z) / ray.direction.z;
 		glm::vec3 temp{ ray.origin + ray.direction * t };
 		if ((temp.y > min_.y && temp.y < max_.y) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-			return  Hitpoint{ true,t,Shape::get_name(),Shape::get_color(),temp,ray.direction };
+			return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
 		}
 	}
 		return Hitpoint{};

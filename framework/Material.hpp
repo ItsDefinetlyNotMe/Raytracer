@@ -9,13 +9,13 @@
 #include "Color.hpp"
 
 struct Material {
-    std::string name;
+    std::string name = "";
 
-    Color ka; // Ambient Color
-    Color kd; // Diffuse Color
-    Color ks; // Specular Color
+    Color ka{}; // Ambient Color
+    Color kd{}; // Diffuse Color
+    Color ks{}; // Specular Color
 
-    float m; // Specular Reflection Constant
+    float m = 32.0f; // Specular Reflection Constant
     Material(std::string n, Color a, Color d, Color s, float spc) :name{ n }, ka{ a }, kd{ d }, ks{ s } {}
     friend std::ostream& operator<<(std::ostream& out, Material const& mat) {
         out << "Material: " << mat.name << "\n"

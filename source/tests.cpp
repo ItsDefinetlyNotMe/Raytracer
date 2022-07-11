@@ -36,10 +36,10 @@ TEST_CASE("Box_area","[Box]") {
 }
 
 TEST_CASE("Output", "[Shape]") {
-	Sphere sp_1{ "Sphere", Color{1.0f,1.0f,1.0f}, glm::vec3{0.2f,-0.3,9.5f},2.0f };
+	Sphere sp_1{ "Sphere", {}, glm::vec3{0.2f,-0.3,9.5f},2.0f };
 	Sphere sp_2{ glm::vec3{ 3.5f,-3.5f,0.0f },-2.0f };
 
-	Box b_1{ "Box", {0.0f,0.2f,3.1f}, {0.0f,1.2,0.01f}, {0.1f,-1.3f,1.0f} };
+	Box b_1{ "Box", {}, {0.0f,1.2,0.01f}, {0.1f,-1.3f,1.0f} };
 	Box b_2{ {-3.0f,9.2f,9.1f}, {4.1f,-2.4f,0.3f} };
 	std::cout << "Sphere:\n" << sp_1 << std::endl;
 	std::cout << "Sphere:\n" << sp_1 << "\n" << sp_2 << "\n"<< "Box:\n" << b_1 << "\n" << b_2 << std::endl;
@@ -120,8 +120,8 @@ TEST_CASE("intersect_ray_sphere", " [Sphere] ")
 TEST_CASE("Destructor", " [Destructor] "){
 	Color red{ 255 , 0 , 0 };
 	glm::vec3 position{ 0.0f , 0.0f , 0.0f };
-	Sphere* s1 = new Sphere{" sphere0 " ,red, position , 1.2f };
-	Shape* s2 = new Sphere{ "sphere1" , red , position , 1.2f };
+	Sphere* s1 = new Sphere{" sphere0 " ,{}, position , 1.2f };
+	Shape* s2 = new Sphere{ "sphere1" , {} , position , 1.2f };
 	s1->print(std::cout);
 	s2->print(std::cout);
 	delete s1;
@@ -174,7 +174,7 @@ TEST_CASE("SDF", " [material-sdf] ") {
 	REQUIRE(a[2]->ks == blue.ks);
 
 
-};
+}
 TEST_CASE("find_method","[find]") {
 	auto red = std::make_shared<Material>(Material{"red",{1.0,0.0,0.0},{1.0,0.0,0.0},{1.0,0.0,0.0},20.0f });
 	auto green = std::make_shared<Material>(Material{ "green",{0.0,1.0,0.0},{0.0,1.0,0.0},{0.0,1.0,0.0},50.0f });

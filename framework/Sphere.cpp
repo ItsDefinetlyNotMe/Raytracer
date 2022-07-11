@@ -2,7 +2,7 @@
 #include "Sphere.hpp"
 #include <glm/gtx/intersect.hpp>
 Sphere::Sphere(glm::vec3 const& c, float r):Shape{}, center_ { c }, radius_{ r } {}
-Sphere::Sphere(std::string const& s, Color const& co, glm::vec3 const& c, float r) : Shape{ s,co }, center_{ c }, radius_{ r } {} 
+Sphere::Sphere(std::string const& s, std::shared_ptr<Material> const& mat, glm::vec3 const& c, float r) : Shape{ s,mat }, center_{ c }, radius_{ r } {} 
 Sphere::~Sphere(){ std::cout << "Destruktor Sphere" << std::endl; };
 
 float Sphere::area() const{
@@ -20,5 +20,5 @@ std::ostream& Sphere::print(std::ostream& os) const{
 Hitpoint Sphere::intersect(Ray const& r) const {
 	float t;
 	bool hit = glm::intersectRaySphere(r.origin , glm::normalize(r.direction),center_,radius_*radius_,t);
-	return Hitpoint{ hit,t,Shape::get_name(),Shape::get_color(),r.origin + r.direction * t,r.direction};
+	return Hitpoint{ hit,t,Shape::get_name(),Shape::get_material(),r.origin + r.direction * t,r.direction};
 }
