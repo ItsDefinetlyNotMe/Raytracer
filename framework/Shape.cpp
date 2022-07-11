@@ -23,7 +23,7 @@ std::string Shape::get_name() const {
 
 
 std::ostream& Shape::print(std::ostream& os) const{
-	return os << "Name: " << name_ << ", Material: " << mat_ << "\n";
+	return os << "Name: " << name_ << ", Material: " << *mat_ << "\n";
 }
 std::ostream& operator<<(std::ostream& os, Shape const& s) {
 	return s.print(os);

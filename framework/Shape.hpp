@@ -11,6 +11,7 @@
 class Shape {
 private: 
 	std::string name_{""};
+	// this is pointer
 	std::shared_ptr<Material> mat_;
 public:
 	// Shape(std::string const& s, Color const& c);
