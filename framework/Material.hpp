@@ -16,7 +16,6 @@ struct Material {
     Color ks{}; // Specular Color
 
     float m = 32.0f; // Specular Reflection Constant
-    Material(std::string n, Color a, Color d, Color s, float spc) :name{ n }, ka{ a }, kd{ d }, ks{ s } {}
     friend std::ostream& operator<<(std::ostream& out, Material const& mat) {
         out << "Material: " << mat.name << "\n"
             << " Ambient Color: " << mat.ka
