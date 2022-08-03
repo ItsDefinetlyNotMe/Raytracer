@@ -11,8 +11,8 @@ private:
 public:
 	Sphere(float r);
 	Sphere(glm::vec3 const& c);
-	Sphere(glm::vec3 const& c, float r );
-	Sphere(std::string const& s, Color const& co, glm::vec3 const& c, float r);
+	Sphere(glm::vec3 const& c, float r);
+	Sphere(std::string const& s, std::shared_ptr<Material> const& mat, glm::vec3 const& c, float r);
 	~Sphere();
 
 	float area() const override;
@@ -23,4 +23,3 @@ public:
 
 //std::ostream& operator<<(std::ostream& os, Sphere const& s);
 #endif // !SPHERE_HPP
-
