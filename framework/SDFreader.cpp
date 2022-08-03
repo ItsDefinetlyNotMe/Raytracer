@@ -12,6 +12,7 @@
 std::vector<std::shared_ptr<Material>> sdf_reader(std::string path) {
     std::vector<std::shared_ptr<Material>> materials;
     std::vector<std::shared_ptr<Shape>> shapes;
+    //std::vector<std::shared_ptr<Light>> lights
 
     std::ifstream sdf_filestream(path, std::ios::in);
     
@@ -25,18 +26,18 @@ std::vector<std::shared_ptr<Material>> sdf_reader(std::string path) {
         std::istringstream iss(line_buffer);
         std::string keyword = "";
         iss >> keyword;
-        std::string name = "";
         
-        //kommt noch ins material if
-
-        Color ka{};// Ambient Color
-        Color kd{};// Diffuse Color
-        Color ks{};// Specular Color
-        float m; // Specular Reflection Constant
+        
 
         if ("define" == keyword) {
             iss >> keyword;
             if ("material" == keyword) {
+                
+                std::string name = "";
+                Color ka{};// Ambient Color
+                Color kd{};// Diffuse Color
+                Color ks{};// Specular Color
+                float m; // Specular Reflection Constant
 
                 iss >> name;
                 iss >> ka.r >> ka.g >> ka.b;
@@ -79,14 +80,41 @@ std::vector<std::shared_ptr<Material>> sdf_reader(std::string path) {
                 }
             }
             else if ("light" == keyword) {
+                //define light <name> [pos] [color] [brightness]
+                std::string light_name;
+                glm::vec3 pos{};
+                Color color{};
+                glm::vec3 brightness;
+                
+                iss >> light_name;
+                iss >> pos.x >> pos.y >> pos.z;
+                iss >> color.r >> color.g >> color.b;
+                iss >> brightness.x >> brightness.y >> brightness.z;
+
+                //make_shared<Light>(Light{});
 
             }
             else if ("camera" == keyword) {
-
+                //camera <name> <fov-x>
+                std::string camera_name;
+                float fov_x;
+                iss >> camera_name >> fov_x;
+                //std::make_shared<Camera>(Camera{});
+            }
+            else if ("ambient" == keyword){
+                //ambient [ambient]
+                Color ambient;
+                iss >> ambient.r >> ambient.g >> ambient.b;
             }
         }
         else if ("render" == keyword) {
-
+            //render <cam-name> <filename> <x-res> <y-res>
+            std::string cam_name;
+            std::string filename;
+            float x_res;
+            float y_res;
+            iss >> cam_name >> filename >> x_res >> y_res;
+            //render
         }
     }
     return materials;
