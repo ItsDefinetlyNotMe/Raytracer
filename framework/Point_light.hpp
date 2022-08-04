@@ -9,5 +9,7 @@ private:
 	glm::vec3 position_;
 	Color color_;
 	glm::vec3 brightness_;
+public:
+	Point_Light(std::string const& n, glm::vec3 const& p,Color const& c,glm::vec3 const& b);
 };
 #endif // !POINT_LIGHT

@@ -7,11 +7,16 @@
 #include "Sphere.hpp"
 #include "SDFreader.hpp"
 #include "Box.hpp"
+#include "renderer.hpp"
+#include "Point_light.hpp"
+#include "material_container.hpp"
 
 
 std::vector<std::shared_ptr<Material>> sdf_reader(std::string path) {
     std::vector<std::shared_ptr<Material>> materials;
+    std::vector<std::shared_ptr<Point_Light>> lights;
     std::vector<std::shared_ptr<Shape>> shapes;
+
     //std::vector<std::shared_ptr<Light>> lights
 
     std::ifstream sdf_filestream(path, std::ios::in);
@@ -50,18 +55,20 @@ std::vector<std::shared_ptr<Material>> sdf_reader(std::string path) {
             else if ("shape" == keyword) {
                 iss >> keyword;
                 if ("sphere" == keyword) {
-                    //define shape sphere <name>[center] <radius> <mat - name>
+                    //define shape sphere <name> [center] <radius> <mat-name>
                     std::string sphere_name;
                     glm::vec3 center{};
                     float radius;
                     std::string mat_name;
+
                     iss >> sphere_name;
                     iss >> center.x >> center.y >> center.z;
                     iss >> radius;
                     iss >> mat_name;
 
-                   // find material with name
-                   //shapes.push_back(std::make_shared<Sphere>(Sphere{ sphere_name,center,radius,mat_name }));
+                   // find material with name ////Vector?////
+                   // !!Annahme!! Material wird vor Sphere deklariert
+                    shapes.push_back(std::make_shared<Sphere>(Sphere{ sphere_name,find(materials,mat_name),center,radius }));
                 }
                 else if ("box" == keyword) {
                     //define shape box <name> [p1] [p2] <mat-name>
@@ -75,8 +82,9 @@ std::vector<std::shared_ptr<Material>> sdf_reader(std::string path) {
                     iss >> max.x >> max.y >> max.z;
                     iss >> mat_name;
                     
-                    // find material with name
-                    //shapes.push_back(std::make_shared<Box>(Box{}));
+                    // find material with name ////Vector?////
+                    // !!Annahme!! Material wird vor Box deklariert
+                    shapes.push_back(std::make_shared<Box>(Box{box_name,find(materials,mat_name),min,max}));
                 }
             }
             else if ("light" == keyword) {
@@ -90,8 +98,8 @@ std::vector<std::shared_ptr<Material>> sdf_reader(std::string path) {
                 iss >> pos.x >> pos.y >> pos.z;
                 iss >> color.r >> color.g >> color.b;
                 iss >> brightness.x >> brightness.y >> brightness.z;
-
-                //make_shared<Light>(Light{});
+                ///
+                lights.push_back(std::make_shared<Point_Light>(Point_Light{}));
 
             }
             else if ("camera" == keyword) {
@@ -114,7 +122,7 @@ std::vector<std::shared_ptr<Material>> sdf_reader(std::string path) {
             float x_res;
             float y_res;
             iss >> cam_name >> filename >> x_res >> y_res;
-            //render
+            //renderer
         }
     }
     return materials;

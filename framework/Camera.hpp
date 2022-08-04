@@ -10,6 +10,6 @@ private:
 	std::string name_;
 	float fov_x_;
 public:
-	Camera(std::string name, float fov_x);
+	Camera(std::string const& name, float fov_x);
 };
 #endif // !Camera
