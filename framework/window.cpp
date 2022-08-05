@@ -206,10 +206,11 @@ float Window::get_time() const
 
 void Window::show(std::vector<Color> const& color_buffer)
 {
+  glBindTexture(GL_TEXTURE_2D, texture_); // bind texture before updating
   glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, window_size_.x, window_size_.y, GL_RGB, GL_FLOAT, color_buffer.data());
   glBindVertexArray(vao_);
   glUseProgram(program_);
-  glBindTexture(GL_TEXTURE_2D, texture_);
+  // glBindTexture(GL_TEXTURE_2D, texture_);
   glDrawArrays(GL_TRIANGLES, 0, 3);
   glBindVertexArray(0);
   glBindTexture(GL_TEXTURE_2D, 0);

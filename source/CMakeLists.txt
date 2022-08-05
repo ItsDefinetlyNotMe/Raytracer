@@ -22,3 +22,12 @@ target_link_libraries(tests
   ${GLFW_LIBRARIES} ${FRAMEWORK_NAME} ${LIBRARIES}
   )
 
+add_executable(raycaster raycaster.cpp)
+
+target_link_libraries(raycaster ${FRAMEWORK_NAME} ${LIBRARIES}
+  glfw
+  ${GLFW_LIBRARIES}
+  )
+add_dependencies(raycaster glfw ${FRAMEWORK_NAME} ${COPY_BINARY})
+
+install(TARGETS raycaster DESTINATION .)

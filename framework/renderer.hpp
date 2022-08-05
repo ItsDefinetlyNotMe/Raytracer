@@ -15,13 +15,17 @@
 #include "ppmwriter.hpp"
 #include <string>
 #include <glm/glm.hpp>
+#include <vector>
+#include <memory>
+
+#include "Shape.hpp"
 
 class Renderer
 {
 public:
-  Renderer(unsigned w, unsigned h, std::string const& file);
+  Renderer(unsigned w, unsigned h, std::string const& file, std::vector<std::shared_ptr<Shape>> const& objects);
 
-  void render();
+  void render(float fov);
   void write(Pixel const& p);
 
   inline std::vector<Color> const& color_buffer() const
@@ -34,6 +38,7 @@ private:
   unsigned height_;
   std::vector<Color> color_buffer_;
   std::string filename_;
+  std::vector<std::shared_ptr<Shape>> objects_;
   PpmWriter ppm_;
 };
 
