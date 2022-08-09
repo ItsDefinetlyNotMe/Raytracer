@@ -4,20 +4,23 @@
 #include <sstream>
 #include <glm/vec3.hpp>
 
-#include "Sphere.hpp"
 #include "SDFreader.hpp"
 #include "Box.hpp"
-#include "renderer.hpp"
-#include "Point_light.hpp"
-#include "material_container.hpp"
+#include "Sphere.hpp"
 
 
-std::vector<std::shared_ptr<Material>> sdf_reader(std::string path) {
+
+Scene sdf_reader(std::string const& path ) {
+    //kommentar
     std::vector<std::shared_ptr<Material>> materials;
     std::vector<std::shared_ptr<Point_Light>> lights;
+    std::vector<std::shared_ptr<Camera>> cameras;
     std::vector<std::shared_ptr<Shape>> shapes;
 
+
     //std::vector<std::shared_ptr<Light>> lights
+
+    std::shared_ptr<Renderer> rend;
 
     std::ifstream sdf_filestream(path, std::ios::in);
     
@@ -99,7 +102,7 @@ std::vector<std::shared_ptr<Material>> sdf_reader(std::string path) {
                 iss >> color.r >> color.g >> color.b;
                 iss >> brightness.x >> brightness.y >> brightness.z;
                 ///
-                lights.push_back(std::make_shared<Point_Light>(Point_Light{}));
+                lights.push_back(std::make_shared<Point_Light>(Point_Light{light_name,pos,color,brightness}));
 
             }
             else if ("camera" == keyword) {
@@ -116,15 +119,17 @@ std::vector<std::shared_ptr<Material>> sdf_reader(std::string path) {
             }
         }
         else if ("render" == keyword) {
-            //render <cam-name> <filename> <x-res> <y-res>
+            //render <cam-name> <filename> <x-res> <y-res> //Cameraname ?
             std::string cam_name;
             std::string filename;
             float x_res;
             float y_res;
             iss >> cam_name >> filename >> x_res >> y_res;
-            //renderer
+            //find(cameras, cam_name);
+            rend = std::make_shared<Renderer>(Renderer{ x_res,y_res,filename,*(cameras[0]) });
         }
     }
-    return materials;
+    Scene s{ shapes,cameras,lights,rend };
     sdf_filestream.close();
+    return;
 }

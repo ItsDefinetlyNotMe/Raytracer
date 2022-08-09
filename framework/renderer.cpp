@@ -8,17 +8,18 @@
 // -----------------------------------------------------------------------------
 
 #include "renderer.hpp"
-
-Renderer::Renderer(unsigned w, unsigned h, std::string const& file)
+//added Camera to the mix
+Renderer::Renderer(unsigned w, unsigned h, std::string const& file,Camera const& cam)
   : width_(w)
   , height_(h)
   , color_buffer_(w*h, Color{0.0, 0.0, 0.0})
   , filename_(file)
+  , camera_(cam)
   , ppm_(width_, height_)
 {}
 
-void Renderer::render()
-{
+void Renderer::render(Scene const& s)
+{/*
   std::size_t const checker_pattern_size = 20;
 
   for (unsigned y = 0; y < height_; ++y) {
@@ -33,6 +34,21 @@ void Renderer::render()
       write(p);
     }
   }
+  */
+    for (unsigned x = 0; x < width_; ++x) {
+        for (unsigned y = 0; y < height_; ++y) {
+            Pixel p(x, y);
+
+
+            float screen_x_normalized = 2.0f * (((float)x + 0.5f) / (float)width_) - 1.0f;
+            float screen_y_normalized = 2.0f * (((float)y + 0.5f) / (float)height_) - 1.0f;
+
+            Pixel p_norm(screen_x_normalized,screen_y_normalized);
+
+            p.color = camera_.trace_ray(p_norm,(float)width_/(float)height_,s);
+            write(p);
+        }
+    }
   ppm_.save(filename_);
 }
 
