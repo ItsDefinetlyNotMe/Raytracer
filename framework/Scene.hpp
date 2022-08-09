@@ -1,18 +1,16 @@
 #ifndef SCENE
 #define SCENE
+#include <vector> 
+#include "Shape.hpp"
+#include "Camera.hpp" 
+#include "renderer.hpp"
+#include "Point_light.hpp"
 
-
-#import <vector> 
-#import "Shape.hpp"
-#import "Camera.hpp" 
-#import "renderer.hpp"
-#import "Point_light.hpp"
-
-struct Scene{
-	std::vector<std::shared_ptr<Shape>> world_;//composite muss noch gabut werden
-	std::vector<std::shared_ptr<Camera>> cameras_;
-	std::vector<std::shared_ptr<Point_Light>>lights_{};
+struct Scene {
+	std::vector<std::shared_ptr<Shape>> world_{ nullptr };//composite muss noch gabut werden
+	std::vector<std::shared_ptr<Camera>> cameras_{ nullptr };
+	std::vector<std::shared_ptr<Point_Light>>lights_{ nullptr };
 	//ambient_;
-	std::shared_ptr<Renderer> render_;
+	std::shared_ptr<Renderer> render_{ nullptr };
 };
 #endif // !SCENE
