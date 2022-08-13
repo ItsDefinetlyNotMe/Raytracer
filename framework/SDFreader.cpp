@@ -9,18 +9,22 @@
 #include "Sphere.hpp"
 
 
-
-Scene sdf_reader(std::string const& path ) {
+//mag ich nicht!!
+std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
     //kommentar
     std::vector<std::shared_ptr<Material>> materials;
     std::vector<std::shared_ptr<Point_Light>> lights;
     std::vector<std::shared_ptr<Camera>> cameras;
     std::vector<std::shared_ptr<Shape>> shapes;
+    Color ambient{0.2f,0.2f,0.2f};
+    ///////////////////////////
+    std::string cam_name;
+    std::string filename;
+    unsigned x_res = 0;
+    unsigned y_res = 0;
+    ///////////////////////////
 
-
-    //std::vector<std::shared_ptr<Light>> lights
-
-    std::shared_ptr<Renderer> rend;
+    std::shared_ptr<Renderer> rend = nullptr;
 
     std::ifstream sdf_filestream(path, std::ios::in);
     
@@ -95,12 +99,12 @@ Scene sdf_reader(std::string const& path ) {
                 std::string light_name;
                 glm::vec3 pos{};
                 Color color{};
-                glm::vec3 brightness;
+                float brightness;
                 
                 iss >> light_name;
                 iss >> pos.x >> pos.y >> pos.z;
                 iss >> color.r >> color.g >> color.b;
-                iss >> brightness.x >> brightness.y >> brightness.z;
+                iss >> brightness;
                 ///
                 lights.push_back(std::make_shared<Point_Light>(Point_Light{light_name,pos,color,brightness}));
 
@@ -110,26 +114,24 @@ Scene sdf_reader(std::string const& path ) {
                 std::string camera_name;
                 float fov_x;
                 iss >> camera_name >> fov_x;
-                //std::make_shared<Camera>(Camera{});
+                cameras.push_back(std::make_shared<Camera>(Camera{camera_name,fov_x}));
             }
             else if ("ambient" == keyword){
                 //ambient [ambient]
-                Color ambient;
                 iss >> ambient.r >> ambient.g >> ambient.b;
             }
         }
         else if ("render" == keyword) {
             //render <cam-name> <filename> <x-res> <y-res> //Cameraname ?
-            std::string cam_name;
-            std::string filename;
-            float x_res;
-            float y_res;
             iss >> cam_name >> filename >> x_res >> y_res;
-            //find(cameras, cam_name);
-            rend = std::make_shared<Renderer>(Renderer{ x_res,y_res,filename,*(cameras[0]) });
+            //cam = find(cameras, cam_name);
         }
     }
-    Scene s{ shapes,cameras,lights,rend };
+    std::cout << *shapes[0] << "\n" << *shapes[1] << std::endl;
+    std::cout << cameras[0]->position_.x << "," << cameras[0]->position_.y << "," << cameras[0]->position_.z;
+
+    Scene s{ shapes,cameras,lights,ambient };
+    rend = std::make_shared<Renderer>(Renderer{ x_res,y_res,filename,*(cameras[0]),s });
     sdf_filestream.close();
-    return;
+    return rend;
 }

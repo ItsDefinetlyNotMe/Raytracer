@@ -12,6 +12,6 @@
 #include "Scene.hpp"
 
 //std::vector<std::shared_ptr<Material>> sdf_reader(std::string path);
-Scene sdf_reader(std::string const& path);
+std::shared_ptr<Renderer> sdf_reader(std::string const& path);
 
 #endif // !SDF_READER
