@@ -16,16 +16,19 @@
 #include "ppmwriter.hpp"
 #include <string>
 #include <glm/glm.hpp>
-
 #include "Scene.hpp"
-
+#include "Shape.hpp"
 class Renderer
 {
 public:
-  Renderer(unsigned w, unsigned h, std::string const& file, Camera const& cam);
+  Renderer(unsigned w, unsigned h, std::string const& file, Camera const& cam,Scene const& sce);
 
-  void render(Scene const& s);
+  void render();
   void write(Pixel const& p);
+
+  Color trace_ray(float x, float y) const;
+  Color Renderer::lightning(Hitpoint const& h, std::shared_ptr<Shape> const& obj_h) const;
+
 
   inline std::vector<Color> const& color_buffer() const
   {
@@ -39,6 +42,7 @@ private:
   std::string filename_;
   PpmWriter ppm_;
   Camera camera_;
+  Scene scene_;
 };
 
 #endif // #ifndef BUW_RENDERER_HPP
