@@ -22,22 +22,7 @@ Renderer::Renderer(unsigned w, unsigned h, std::string const& file,Camera const&
 {}
 
 void Renderer::render()
-{/*
-  std::size_t const checker_pattern_size = 20;
-
-  for (unsigned y = 0; y < height_; ++y) {
-    for (unsigned x = 0; x < width_; ++x) {
-      Pixel p(x,y);
-      if ( ((x/checker_pattern_size)%2) != ((y/checker_pattern_size)%2)) {
-        p.color = Color{0.0f, 1.0f, float(x)/height_};
-      } else {
-        p.color = Color{1.0f, 0.0f, float(y)/width_};
-      }
-
-      write(p);
-    }
-  }
-  */
+{
     for (unsigned x = 0; x < width_; ++x) {
         for (unsigned y = 0; y < height_; ++y) {
             Pixel p(x, y);
@@ -85,16 +70,14 @@ Color Renderer::trace_ray(float x, float y) const {
 }
 
 Color Renderer::lightning(Hitpoint const& h,std::shared_ptr<Shape> const& obj_h) const {
-    Color col{};
+    Color col{ scene_.ambient_ * h.mat->ka_ };
     //ambient
-    col = Color{ scene_.ambient_.r * h.mat->ka_.r,scene_.ambient_.g * h.mat->ka_.g,scene_.ambient_.b * h.mat->ka_.b };
-    
+    float epsilon = 0.001f;
     for (auto const& light : scene_.lights_){
         bool obstruction = false;
-
         //mit einem epsilon ?
-        Ray secondary_ray{ h.point3d + (obj_h->normal(h.point3d) * 0.1f) ,glm::normalize(light->position_ - h.point3d) };
-        
+        Ray secondary_ray{ h.point3d + (obj_h->normal(h.point3d) * 0.1f)  ,glm::normalize(light->position_ - h.point3d)};
+        //
         for (auto const& sobj : scene_.world_) {
             Hitpoint shitp = sobj->intersect(secondary_ray);
                 if (shitp.hit && shitp.t >= 0) {
@@ -102,30 +85,18 @@ Color Renderer::lightning(Hitpoint const& h,std::shared_ptr<Shape> const& obj_h)
                     break;
                 }
         }
-
         if (!obstruction) {
-
-            glm::vec3 light_color{ light->color_.r,light->color_.g,light->color_.b };
-
             //diffuse
-            glm::vec3 kd{ h.mat->kd_.r,h.mat->kd_.g,h.mat->kd_.b };
             glm::vec3 norm{ obj_h->normal(h.point3d) };
             float idk = glm::dot(norm, secondary_ray.direction);
-            glm::vec3 c{ light->brightness_ * kd * std::max(idk,0.0f) * light_color };
             //idk wird negativ was tun ?
-            col += Color{ c.x,c.y,c.z };
+            col += light->color_ * light->brightness_ * h.mat->kd_ * std::max(idk,0.0f);
             
-            
-            //specular reflection //!!Verhält sich komisch bei m = 1
-            glm::vec3 i{ secondary_ray.direction };
-            glm::vec3 rotated_i{ (-i) - (2 * glm::dot(-i,norm) * norm) };
+            //specular //!!Verhält sich komisch bei m = 1
+            glm::vec3 rotated_i{ (-secondary_ray.direction) - (2 * glm::dot(-secondary_ray.direction,norm) * norm) };
             glm::vec3 eye_vec{ glm::normalize(h.point3d - camera_.position_)};
-            glm::vec3 ks{ h.mat->ks_.r,h.mat->ks_.g,h.mat->ks_.b };
 
-            
-
-            glm::vec3 cs{ std::max(std::pow(glm::dot(rotated_i, eye_vec), h.mat->m_),0.0f) * ks * light->brightness_ * light_color };
-            col += Color{ cs.x,cs.y,cs.z };
+            col += std::max(std::pow(glm::dot(rotated_i, eye_vec), h.mat->m_), 0.0f) * h.mat->ks_ * light->brightness_ * light->color_;
         }
     }
         return col;
