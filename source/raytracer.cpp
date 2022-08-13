@@ -32,8 +32,23 @@ int main(int argc, char* argv[])
   return 0;
 }*/
 int main(int argc, char* argv[]) {
+    unsigned const image_width = 800;//480;
+    unsigned const image_height = 600;//320;
+
     std::string const filename = "./examplescene.sdf";
     auto s = sdf_reader(filename);
-    s.render_->render(s);
+    s->render();
+
+    Window window{ {image_width, image_height} };
+
+    while (!window.should_close()) {
+        if (window.get_key(GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+            window.close();
+        }
+        auto b = s->color_buffer();
+        window.show(s->color_buffer());
+    }
+
+    return 0;
 }
 
