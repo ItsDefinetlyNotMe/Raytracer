@@ -11,6 +11,7 @@
 #define BUW_COLOR_HPP
 
 #include <iostream>
+#include <glm/vec3.hpp>
 
 struct Color
 {
@@ -56,4 +57,14 @@ struct Color
   float b;
 };
 bool operator==(Color const& c1, Color const& c2);
+
+Color operator*(Color const& a, glm::vec3 const& b);
+Color operator*(glm::vec3 const& a, Color const& b);
+
+Color operator*(Color const& a, float b);
+Color operator*(float a,Color const& b);
+
+Color operator*(Color const& a, Color const& b);
+
+
 #endif //#define BUW_COLOR_HPP
