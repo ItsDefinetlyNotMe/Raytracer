@@ -14,5 +14,6 @@ public:
 	float volume() const;
 	std::ostream& print(std::ostream& os) const override;
 	Hitpoint intersect(Ray const& ray) const override;
+	glm::vec3 normal(glm::vec3 const& point) const override;
 };
 //std::ostream& operator<<(std::ostream& os, Box const& b);
