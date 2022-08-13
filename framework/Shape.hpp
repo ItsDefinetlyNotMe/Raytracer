@@ -26,6 +26,7 @@ public:
 	std::shared_ptr<Material> get_material() const;
 	std::string get_name() const;
 	virtual Hitpoint intersect(Ray const& ray) const = 0;
+	virtual glm::vec3 normal(glm::vec3 const& point) const = 0;
 };
 std::ostream& operator<<(std::ostream& os, Shape const& s);
 #endif // ! SHAPE_HPP

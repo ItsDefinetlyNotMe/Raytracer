@@ -11,7 +11,7 @@ Achten Sie darauf, dass Sie für die effiziente Suche auf Ihrem std::set mittels
 std::set::find(...) eine Vergleichsfunktion der Form */
 std::shared_ptr<Material> find(std::vector<std::shared_ptr<Material>> const& vec,std::string const&  mname ) {
 	for (auto i = vec.begin(); i != vec.end(); ++i) {
-		if ((*i)->name == mname) {
+		if ((*i)->name_ == mname) {
 			return (*i);
 		}
 	}
@@ -32,5 +32,5 @@ std::shared_ptr<Material> find(std::set<std::shared_ptr<Material>> const& set, s
 	return *i;
 }
 bool operator<(std::shared_ptr<Material> const& lhs, std::shared_ptr<Material> const& rhs) {
-	return lhs->name < rhs->name;
+	return lhs->name_ < rhs->name_;
 };
