@@ -10,10 +10,11 @@
 
 struct Material {
     std::string name_;
-
+    
     Color ka_; // Ambient Color
     Color kd_; // Diffuse Color
     Color ks_; // Specular Color
+    
 
     float m_; // Specular Reflection Constant
 
