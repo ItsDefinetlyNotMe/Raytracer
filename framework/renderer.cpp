@@ -32,6 +32,7 @@ void Renderer::render()
             float screen_y_normalized = 2.0f * (((float)y + 0.5f) / (float)height_) - 1.0f;
 
             p.color = trace_ray(screen_x_normalized,screen_y_normalized);
+            p.color = Color{ p.color.r / (p.color.r + 1),p.color.g / (p.color.g + 1),p.color.b / (p.color.b + 1) };
             write(p);
         }
     }
