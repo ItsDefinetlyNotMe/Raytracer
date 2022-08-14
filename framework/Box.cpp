@@ -26,9 +26,9 @@ std::ostream& Box::print(std::ostream& os) const {
 }
 //inside swapped with not_inside
 Hitpoint Box::intersect(Ray const& ray) const {
-
+	
 	//vlt eleganter ?
-	bool not_inside = true;
+	bool not_inside = true;//true = rückseite sehen
 	if (ray.origin.x > min_.x && ray.origin.x < max_.x && ray.origin.y > min_.y && ray.origin.y < max_.y && ray.origin.z > min_.z && ray.origin.z < max_.z) {
 		not_inside = false;
 	}
@@ -76,6 +76,42 @@ Hitpoint Box::intersect(Ray const& ray) const {
 			return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
 		}
 	}
+	/*
+	float t = (min_.x - ray.origin.x) / ray.direction.x;
+	glm::vec3 temp{ ray.origin + ray.direction * t };
+	if ((temp.z > min_.z && temp.z < max_.z) && (temp.y > min_.y && temp.y < max_.y) && t >= 0) {
+		return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
+	}
+	
+	t = (max_.x - ray.origin.x) / ray.direction.x;
+	temp =  ray.origin + ray.direction * t ;
+	if ((temp.z > min_.z && temp.z < max_.z) && (temp.y > min_.y && temp.y < max_.y) && t >= 0) {
+		return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
+	}
+
+	t = (min_.y - ray.origin.y) / ray.direction.y;
+	temp = ray.origin + ray.direction * t ;
+	if ((temp.z > min_.z && temp.z < max_.z) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
+		return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
+	}
+
+	t = (max_.y - ray.origin.y) / ray.direction.y;
+	temp = ray.origin + ray.direction * t ;
+	if ((temp.z > min_.z && temp.z < max_.z) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
+		return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
+	}
+
+	t = (min_.z - ray.origin.z) / ray.direction.z;
+	temp = ray.origin + ray.direction * t;
+	if ((temp.y > min_.y && temp.y < max_.y) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
+		return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
+	}
+
+	t = (max_.z - ray.origin.z) / ray.direction.z;
+	temp =  ray.origin + ray.direction * t;
+	if ((temp.y > min_.y && temp.y < max_.y) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
+		return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
+	}*/
 	return Hitpoint{};
 }
 
@@ -83,22 +119,22 @@ glm::vec3 Box::normal(glm::vec3 const& point) const {
 	//!!Assumption point is on the box surface
 	//! FLOATS
 	if (floating_equal<float>(point.x, min_.x))
-		return glm::normalize(glm::vec3{ max_.x,min_.y,min_.z } - min_);
+		return -glm::normalize(glm::vec3{ max_.x,min_.y,min_.z } - min_);
 
 	else if (floating_equal<float>(point.x,max_.x))
-		return glm::normalize(min_ - glm::vec3{ max_.x,min_.y,min_.z });
+		return -glm::normalize(min_ - glm::vec3{ max_.x,min_.y,min_.z });
 
 	else if (floating_equal<float>(point.y,min_.y))
-		return glm::normalize(glm::vec3{ min_.x,max_.y,min_.z } - min_);
+		return -glm::normalize(glm::vec3{ min_.x,max_.y,min_.z } - min_);
 
 	else if (floating_equal<float>(point.y,max_.y))
-		return glm::normalize(min_ - glm::vec3{ min_.x,max_.y,min_.z });
+		return -glm::normalize(min_ - glm::vec3{ min_.x,max_.y,min_.z });
 
 	else if (floating_equal<float>(point.z,min_.z))
-		return glm::normalize(glm::vec3{ min_.x,min_.y,max_.z } - min_);
+		return -glm::normalize(glm::vec3{ min_.x,min_.y,max_.z } - min_);
 
 	else if (floating_equal<float>(point.z,max_.z))
-		return glm::normalize(min_ - glm::vec3{ min_.x,min_.y,max_.z });
+		return -glm::normalize(min_ - glm::vec3{ min_.x,min_.y,max_.z });
 
 	return glm::vec3{};
 }

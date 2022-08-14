@@ -71,17 +71,18 @@ Color Renderer::trace_ray(float x, float y) const {
 }
 
 Color Renderer::lightning(Hitpoint const& h,std::shared_ptr<Shape> const& obj_h) const {
+    
     Color col{ scene_.ambient_ * h.mat->ka_ };
     //ambient
-    float epsilon = 0.001f;
+    float epsilon = 0.01f;
     for (auto const& light : scene_.lights_){
         bool obstruction = false;
         //mit einem epsilon ?
-        Ray secondary_ray{ h.point3d + (obj_h->normal(h.point3d) * 0.1f)  ,glm::normalize(light->position_ - h.point3d)};
+        Ray secondary_ray{ h.point3d  /*+ (obj_h->normal(h.point3d) * 0.1f)*/  ,glm::normalize(light->position_ - h.point3d)};
         //
         for (auto const& sobj : scene_.world_) {
             Hitpoint shitp = sobj->intersect(secondary_ray);
-                if (shitp.hit && shitp.t >= 0) {
+                if (shitp.hit && shitp.t >= epsilon) {
                     obstruction = true;
                     break;
                 }
@@ -90,14 +91,12 @@ Color Renderer::lightning(Hitpoint const& h,std::shared_ptr<Shape> const& obj_h)
             //diffuse
             glm::vec3 norm{ obj_h->normal(h.point3d) };
             float idk = glm::dot(norm, secondary_ray.direction);
-            //idk wird negativ was tun ?
             col += light->color_ * light->brightness_ * h.mat->kd_ * std::max(idk,0.0f);
             
-            //specular //!!Verhält sich komisch bei m = 1
+            //specular 
             glm::vec3 rotated_i{ (-secondary_ray.direction) - (2 * glm::dot(-secondary_ray.direction,norm) * norm) };
-            glm::vec3 eye_vec{ glm::normalize(h.point3d - camera_.position_)};
-
-            col += std::max(std::pow(glm::dot(rotated_i, eye_vec), h.mat->m_), 0.0f) * h.mat->ks_ * light->brightness_ * light->color_;
+            glm::vec3 eye_vec{ glm::normalize(camera_.position_ - h.point3d )};
+            col += std::pow(std::max(glm::dot(rotated_i, eye_vec), 0.0f), h.mat->m_) * h.mat->ks_ * light->brightness_ * light->color_;
         }
     }
         return col;
