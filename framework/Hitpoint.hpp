@@ -12,8 +12,5 @@ struct Hitpoint {
 	glm::vec3 point3d{ 0.0f,0.0f,0.0f };
 	glm::vec3 direction{ 0.0f,0.0f,-1.0f };
 };
-
-bool operator==(Hitpoint const& h1, Hitpoint const& h2);
-
 #endif // !HITPOINT_HPP
 

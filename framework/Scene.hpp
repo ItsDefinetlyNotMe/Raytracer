@@ -10,6 +10,5 @@ struct Scene {
 	std::vector<std::shared_ptr<Camera>> cameras_{ nullptr };
 	std::vector<std::shared_ptr<Point_Light>>lights_{ nullptr };
 	Color ambient_{0.2f,0.2f,0.2f};
-	//std::shared_ptr<Renderer> render_{ nullptr };
 };
 #endif // !SCENE

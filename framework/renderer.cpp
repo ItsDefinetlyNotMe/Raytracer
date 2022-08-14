@@ -46,9 +46,9 @@ Color Renderer::trace_ray(float x, float y) const {
     float camera_x = x * tanf(fov_rad / 2.0f) * ((float)width_ / (float)height_);
     float camera_y = y * tanf(fov_rad / 2.0f);
 
-    glm::vec3 ray_dir{ camera_x, camera_y, -1.0f };
-    ray_dir = glm::normalize(ray_dir);
-    Ray r{ camera_.position_,ray_dir };
+    glm::vec3 prim_ray_dir_n{ glm::normalize(glm::vec3{camera_x, camera_y, -1.0f}) };
+    //prim_ray_dir_n = glm::normalize(prim_ray_dir_n);
+    Ray r{ camera_.position_,prim_ray_dir_n };
     Hitpoint closest_p;
     closest_p.t = INFINITY;
 

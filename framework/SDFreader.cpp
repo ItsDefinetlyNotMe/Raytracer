@@ -124,14 +124,11 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
         else if ("render" == keyword) {
             //render <cam-name> <filename> <x-res> <y-res> //Cameraname ?
             iss >> cam_name >> filename >> x_res >> y_res;
-            //cam = find(cameras, cam_name);
         }
     }
-    std::cout << *shapes[0] << "\n" << *shapes[1] << std::endl;
-    std::cout << cameras[0]->position_.x << "," << cameras[0]->position_.y << "," << cameras[0]->position_.z;
 
     Scene s{ shapes,cameras,lights,ambient };
-    rend = std::make_shared<Renderer>(Renderer{ x_res,y_res,filename,*(cameras[0]),s });
+    rend = std::make_shared<Renderer>(Renderer{ x_res,y_res,filename,*find(cameras,cam_name),s});
     sdf_filestream.close();
     return rend;
 }
