@@ -110,10 +110,14 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
 
             }
             else if ("camera" == keyword) {
-                //camera <name> <fov-x>
+                //camera <name> <fov-x> (<eye> <dir> <up>)
                 std::string camera_name;
                 float fov_x;
-                iss >> camera_name >> fov_x;
+                glm::vec3 eye{ 0.0f,0.0f,0.0f };
+                glm::vec3 dir{ 0.0f,0.0f,-1.0f };
+                glm::vec3 up{ 0.0f,1.0f,0.0f };
+                
+                iss >> camera_name >> fov_x >> eye.x >> eye.y >> eye.z >> dir.x >> dir.y >> dir.z >> up.x >> up.y >> up.z;
                 cameras.push_back(std::make_shared<Camera>(Camera{camera_name,fov_x}));
             }
             else if ("ambient" == keyword){
