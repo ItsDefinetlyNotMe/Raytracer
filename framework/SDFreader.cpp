@@ -110,10 +110,14 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
 
             }
             else if ("camera" == keyword) {
-                //camera <name> <fov-x>
+                //camera <name> <fov-x> (<eye> <dir> <up>)
                 std::string camera_name;
                 float fov_x;
-                iss >> camera_name >> fov_x;
+                glm::vec3 eye{ 0.0f,0.0f,0.0f };
+                glm::vec3 dir{ 0.0f,0.0f,-1.0f };
+                glm::vec3 up{ 0.0f,1.0f,0.0f };
+                
+                iss >> camera_name >> fov_x >> eye.x >> eye.y >> eye.z >> dir.x >> dir.y >> dir.z >> up.x >> up.y >> up.z;
                 cameras.push_back(std::make_shared<Camera>(Camera{camera_name,fov_x}));
             }
             else if ("ambient" == keyword){
@@ -124,14 +128,11 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
         else if ("render" == keyword) {
             //render <cam-name> <filename> <x-res> <y-res> //Cameraname ?
             iss >> cam_name >> filename >> x_res >> y_res;
-            //cam = find(cameras, cam_name);
         }
     }
-    std::cout << *shapes[0] << "\n" << *shapes[1] << std::endl;
-    std::cout << cameras[0]->position_.x << "," << cameras[0]->position_.y << "," << cameras[0]->position_.z;
 
     Scene s{ shapes,cameras,lights,ambient };
-    rend = std::make_shared<Renderer>(Renderer{ x_res,y_res,filename,*(cameras[0]),s });
+    rend = std::make_shared<Renderer>(Renderer{ x_res,y_res,filename,*find(cameras,cam_name),s});
     sdf_filestream.close();
     return rend;
 }

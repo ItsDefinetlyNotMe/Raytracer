@@ -28,6 +28,7 @@ public:
 
   Color trace_ray(float x, float y) const;
   Color Renderer::lightning(Hitpoint const& h, std::shared_ptr<Shape> const& obj_h) const;
+  Color Renderer::trace_ray_second(Ray const& prim_ray) const;
 
 
   inline std::vector<Color> const& color_buffer() const

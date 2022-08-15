@@ -23,15 +23,23 @@ Renderer::Renderer(unsigned w, unsigned h, std::string const& file,Camera const&
 
 void Renderer::render()
 {
+    float d = sin((camera_.fov_x_ / 2.0f) * (M_PI / 180.0f));
+    float distance = (int)(width_ / 2.0f) / d;
+
     for (unsigned x = 0; x < width_; ++x) {
         for (unsigned y = 0; y < height_; ++y) {
             Pixel p(x, y);
 
-            
+            /*
             float screen_x_normalized = 2.0f * (((float)x + 0.5f) / (float)width_) - 1.0f;
             float screen_y_normalized = 2.0f * (((float)y + 0.5f) / (float)height_) - 1.0f;
-
             p.color = trace_ray(screen_x_normalized,screen_y_normalized);
+           */ 
+            int x_normalized = x - (int)((float) width_ / 2.0f);
+            int y_normalized = y - (int)((float)height_ / 2.0f);
+            Ray prim_ray{ camera_.position_,glm::normalize(glm::vec3{ x_normalized,y_normalized,-distance }) };
+
+            p.color = trace_ray_second(prim_ray);
             p.color = Color{ p.color.r / (p.color.r + 1),p.color.g / (p.color.g + 1),p.color.b / (p.color.b + 1) };
             write(p);
         }
@@ -46,61 +54,80 @@ Color Renderer::trace_ray(float x, float y) const {
     float camera_x = x * tanf(fov_rad / 2.0f) * ((float)width_ / (float)height_);
     float camera_y = y * tanf(fov_rad / 2.0f);
 
-    glm::vec3 ray_dir{ camera_x, camera_y, -1.0f };
-    ray_dir = glm::normalize(ray_dir);
-    Ray r{ camera_.position_,ray_dir };
-    Hitpoint closest_p;
-    closest_p.t = INFINITY;
+    glm::vec3 prim_ray_dir_n{ glm::normalize(glm::vec3{camera_x, camera_y, -1.0f }) };
+    Ray prim_ray{ camera_.position_,prim_ray_dir_n };
+    Hitpoint closest_hitpoint;
+    closest_hitpoint.t = INFINITY;
 
     std::shared_ptr<Shape>object_hit;
 
-    Color col = Color{0.0f,0.0f,0.0f};
+    Color pixel_color = Color{0.0f,0.0f,0.0f};
     /////////////////////////////////////////////
-    for (auto const& obj : scene_.world_) {
-        Hitpoint hitp = obj->intersect(r);
-        if (hitp.hit && hitp.t < closest_p.t) {
-            closest_p = hitp;
-            object_hit = obj;
+    for (auto const& objects : scene_.world_) {
+        Hitpoint hitp = objects->intersect(prim_ray);
+        if (hitp.hit && hitp.t < closest_hitpoint.t) {
+            closest_hitpoint = hitp;
+            object_hit = objects;
         }
     }
     //secondary ray
-    if (closest_p.hit) 
-        col += lightning(closest_p, object_hit);
+    if (closest_hitpoint.hit) 
+        pixel_color += lightning(closest_hitpoint, object_hit);
     
-    return col;
+    return pixel_color;
 }
 
-Color Renderer::lightning(Hitpoint const& h,std::shared_ptr<Shape> const& obj_h) const {
-    Color col{ scene_.ambient_ * h.mat->ka_ };
+Color Renderer::trace_ray_second(Ray const& prim_ray) const {
+    Hitpoint closest_hitpoint;
+    closest_hitpoint.t = INFINITY;
+
+    std::shared_ptr<Shape>object_hit;
+
+    Color pixel_color = Color{ 0.0f,0.0f,0.0f };
+    /////////////////////////////////////////////
+    for (auto const& objects : scene_.world_) {
+        Hitpoint hitp = objects->intersect(prim_ray);
+        if (hitp.hit && hitp.t < closest_hitpoint.t) {
+            closest_hitpoint = hitp;
+            object_hit = objects;
+        }
+    }
+    //secondary ray
+    if (closest_hitpoint.hit)
+        pixel_color += lightning(closest_hitpoint, object_hit);
+
+    return pixel_color;
+    return Color{};
+}
+
+Color Renderer::lightning(Hitpoint const& hitpoint,std::shared_ptr<Shape> const& object_hit) const {
+    
+    Color pixel_color{ scene_.ambient_ * hitpoint.mat->ka_ };
     //ambient
-    float epsilon = 0.001f;
+    float epsilon = 0.01f;
     for (auto const& light : scene_.lights_){
-        bool obstruction = false;
-        //mit einem epsilon ?
-        Ray secondary_ray{ h.point3d + (obj_h->normal(h.point3d) * 0.1f)  ,glm::normalize(light->position_ - h.point3d)};
-        //
-        for (auto const& sobj : scene_.world_) {
-            Hitpoint shitp = sobj->intersect(secondary_ray);
-                if (shitp.hit && shitp.t >= 0) {
-                    obstruction = true;
+        bool obstructed = false;
+        Ray secondary_ray{ hitpoint.point3d ,glm::normalize(light->position_ - hitpoint.point3d)};
+        for (auto const& object : scene_.world_) {
+            Hitpoint hitp = object->intersect(secondary_ray);
+                if (hitp.hit && hitp.t >= epsilon) {
+                    obstructed = true;
                     break;
                 }
         }
-        if (!obstruction) {
+        if (!obstructed) {
             //diffuse
-            glm::vec3 norm{ obj_h->normal(h.point3d) };
-            float idk = glm::dot(norm, secondary_ray.direction);
-            //idk wird negativ was tun ?
-            col += light->color_ * light->brightness_ * h.mat->kd_ * std::max(idk,0.0f);
+            glm::vec3 normal_object_hit_n{ object_hit->normal(hitpoint.point3d) };
+            float cos_omega = glm::dot(normal_object_hit_n, secondary_ray.direction);
+            pixel_color += light->color_ * light->brightness_ * hitpoint.mat->kd_ * std::max(cos_omega,0.0f);
             
-            //specular //!!Verhält sich komisch bei m = 1
-            glm::vec3 rotated_i{ (-secondary_ray.direction) - (2 * glm::dot(-secondary_ray.direction,norm) * norm) };
-            glm::vec3 eye_vec{ glm::normalize(h.point3d - camera_.position_)};
-
-            col += std::max(std::pow(glm::dot(rotated_i, eye_vec), h.mat->m_), 0.0f) * h.mat->ks_ * light->brightness_ * light->color_;
+            //specular 
+            glm::vec3 reflected_i_n{ (-secondary_ray.direction) - (2 * glm::dot(-secondary_ray.direction,normal_object_hit_n) * normal_object_hit_n) };
+            glm::vec3 vec_to_cam_n{ glm::normalize(camera_.position_ - hitpoint.point3d )};
+            pixel_color += std::pow(std::max(glm::dot(reflected_i_n, vec_to_cam_n), 0.0f), hitpoint.mat->m_) * hitpoint.mat->ks_ * light->brightness_ * light->color_;
         }
     }
-        return col;
+        return pixel_color;
 }
 
 void Renderer::write(Pixel const& p){

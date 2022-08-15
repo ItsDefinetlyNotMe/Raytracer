@@ -9,14 +9,6 @@ gerben bekommen, und den std::shared_ptr<Material> des gesuchten Materials
 zurückgibt, falls es existiert hat, ansonsten einen nullptr.
 Achten Sie darauf, dass Sie für die effiziente Suche auf Ihrem std::set mittels
 std::set::find(...) eine Vergleichsfunktion der Form */
-std::shared_ptr<Material> find(std::vector<std::shared_ptr<Material>> const& vec,std::string const&  mname ) {
-	for (auto i = vec.begin(); i != vec.end(); ++i) {
-		if ((*i)->name_ == mname) {
-			return (*i);
-		}
-	}
-	return nullptr;
-}
 
 std::shared_ptr<Material> find(std::map<std::string,std::shared_ptr<Material>> const& map, std::string const& mname) {
 	auto i = map.find(mname);
