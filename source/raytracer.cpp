@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
     unsigned const image_width = 800;//480;
     unsigned const image_height = 600;//320;
 
-    std::string const filename = "./examplescene.sdf";
+    std::string const filename = "./../../../../source/examplescene.sdf";
     auto s = sdf_reader(filename);
     s->render();
 
