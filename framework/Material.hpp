@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include <memory>
 
 #include <glm/vec3.hpp>
 
