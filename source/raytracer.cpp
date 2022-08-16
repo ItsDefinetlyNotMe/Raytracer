@@ -32,12 +32,19 @@ int main(int argc, char* argv[])
   return 0;
 }*/
 int main(int argc, char* argv[]) {
-    unsigned const image_width = 800;//480;
-    unsigned const image_height = 600;//320;
-
-    std::string const filename = "./../../../../source/examplescene.sdf";
+    if (argc < 2) {
+      std::cout<<"Usage: raytracer.exe [filename]"<<std::endl;
+      return -1;
+    }
+    
+    std::string const filename = argv[1];
     auto s = sdf_reader(filename);
     s->render();
+
+    unsigned int image_width;
+    unsigned int image_height;
+
+    s->get_size(image_width, image_height);
 
     Window window{ {image_width, image_height} };
 

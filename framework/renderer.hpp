@@ -36,9 +36,15 @@ public:
     return color_buffer_;
   }
 
+  inline void get_size(unsigned int & width, unsigned int & height) const
+  {
+    width = width_;
+    height = height_;
+  }
+
 private:
-  unsigned width_;
-  unsigned height_;
+  unsigned int width_;
+  unsigned int height_;
   std::vector<Color> color_buffer_;
   std::string filename_;
   PpmWriter ppm_;
