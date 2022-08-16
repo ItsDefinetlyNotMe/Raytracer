@@ -21,6 +21,33 @@ std::string Shape::get_name() const {
 	return name_;
 }
 
+glm::mat4 Shape::get_model_matrix() const {
+	return model_;
+}
+
+void Shape::set_translation(Translation translation) {
+	translation_ = translation;
+	update_model_matrix();
+}
+
+void Shape::set_rotation(Rotation rot) {
+	rotation_ = rot;
+	update_model_matrix();
+}
+
+void Shape::set_scaling(Scaling scale) {
+	scale_ = scale;
+	update_model_matrix();
+}
+
+void Shape::update_model_matrix() {
+	glm::mat4 translation_mat = glm::translate(glm::mat4(), translation_.translate);
+	glm::mat4 rotation_mat = glm::rotate(rotation_.angle, rotation_.vector);
+	// uniform scaling for now
+	glm::mat4 scale_mat = glm::scale(glm::vec3(scale_.scale));
+
+	model_ = translation_mat * rotation_mat * scale_mat;
+}
 
 std::ostream& Shape::print(std::ostream& os) const {
 	return os << "Name: " << name_ << ", Material: " << mat_->name_ << "\n";
