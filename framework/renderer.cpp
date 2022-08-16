@@ -10,7 +10,7 @@
 #include "renderer.hpp"
 #include <glm/gtx/rotate_vector.hpp>
 //added Camera to the mix
-//wenn es per const& übergebn werden brauchen wir keinen pointer oder ?
+//wenn es per const& ï¿½bergebn werden brauchen wir keinen pointer oder ?
 Renderer::Renderer(unsigned w, unsigned h, std::string const& file,Camera const& cam,Scene const& sce)
   : width_(w)
   , height_(h)
@@ -26,15 +26,10 @@ void Renderer::render()
     float d = sin((camera_.fov_x_ / 2.0f) * (M_PI / 180.0f));
     float distance = (int)(width_ / 2.0f) / d;
 
-    for (unsigned x = 0; x < width_; ++x) {
-        for (unsigned y = 0; y < height_; ++y) {
+    for (unsigned y = 0; y < height_; ++y) {
+        for (unsigned x = 0; x < width_; ++x) {
             Pixel p(x, y);
 
-            /*
-            float screen_x_normalized = 2.0f * (((float)x + 0.5f) / (float)width_) - 1.0f;
-            float screen_y_normalized = 2.0f * (((float)y + 0.5f) / (float)height_) - 1.0f;
-            p.color = trace_ray(screen_x_normalized,screen_y_normalized);
-           */ 
             int x_normalized = x - (int)((float) width_ / 2.0f);
             int y_normalized = y - (int)((float)height_ / 2.0f);
             Ray prim_ray{ camera_.position_,glm::normalize(glm::vec3{ x_normalized,y_normalized,-distance }) };
