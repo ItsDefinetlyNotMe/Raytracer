@@ -25,17 +25,21 @@ glm::mat4 Shape::get_model_matrix() const {
 	return model_;
 }
 
-void Shape::set_translation(Translation translation) {
+float Shape::get_scale() const {
+	return scale_.scale;
+}
+
+void Shape::set_translation(Translation const& translation) {
 	translation_ = translation;
 	update_model_matrix();
 }
 
-void Shape::set_rotation(Rotation rot) {
+void Shape::set_rotation(Rotation const& rot) {
 	rotation_ = rot;
 	update_model_matrix();
 }
 
-void Shape::set_scaling(Scaling scale) {
+void Shape::set_scaling(Scaling const& scale) {
 	scale_ = scale;
 	update_model_matrix();
 }
@@ -47,6 +51,22 @@ void Shape::update_model_matrix() {
 	glm::mat4 scale_mat = glm::scale(glm::vec3(scale_.scale));
 
 	model_ = translation_mat * rotation_mat * scale_mat;
+}
+
+glm::vec3 Shape::obj_to_world_position(glm::vec3 const& position) const{
+	return glm::vec3(model_ * glm::vec4(position, 1.0f));
+}
+
+glm::vec3 Shape::obj_to_world_direction(glm::vec3 const& direction) const{
+	return glm::vec3(model_ * glm::vec4(direction, 0.0f));
+}
+
+glm::vec3 Shape::world_to_obj_position(glm::vec3 const& position) const{
+	return glm::vec3(glm::inverse(model_) * glm::vec4(position, 1.0f));
+}
+
+glm::vec3 Shape::world_to_obj_direction(glm::vec3 const& direction) const{
+	return glm::vec3(glm::inverse(model_) * glm::vec4(direction, 0.0f));
 }
 
 std::ostream& Shape::print(std::ostream& os) const {

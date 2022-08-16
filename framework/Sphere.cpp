@@ -20,11 +20,17 @@ std::ostream& Sphere::print(std::ostream& os) const {
 
 Hitpoint Sphere::intersect(Ray const& r) const {
 	float t;
-	bool hit = glm::intersectRaySphere(r.origin, glm::normalize(r.direction), center_, radius_ * radius_, t);
-	return Hitpoint{ hit,t,Shape::get_name(),Shape::get_material(),r.origin + r.direction * t,r.direction };
+
+	Ray obj_ray = {world_to_obj_position(r.origin), glm::normalize(world_to_obj_direction(r.direction))};
+
+	bool hit = glm::intersectRaySphere(obj_ray.origin, obj_ray.direction, center_, radius_ * radius_, t);
+
+	float world_t = t * Shape::get_scale();
+
+	return Hitpoint{ hit, world_t,Shape::get_name(),Shape::get_material(),r.origin + r.direction * world_t,r.direction };
 }
 
 glm::vec3 Sphere::normal(glm::vec3 const& point) const {
-	return glm::normalize(point - center_);
+	return glm::normalize(point - Shape::obj_to_world_position(center_));
 }
 

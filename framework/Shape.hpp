@@ -34,12 +34,19 @@ public:
 	std::shared_ptr<Material> get_material() const;
 	std::string get_name() const;
 	glm::mat4 get_model_matrix() const;
+	float get_scale() const; // helpful for t
 
-	void set_translation(Translation translation);
-	void set_rotation(Rotation rot);
-	void set_scaling(Scaling scale);
+	void set_translation(Translation const& translation);
+	void set_rotation(Rotation const& rot);
+	void set_scaling(Scaling const& scale);
 
 	void update_model_matrix();
+
+	glm::vec3 obj_to_world_position(glm::vec3 const& position) const;
+	glm::vec3 obj_to_world_direction(glm::vec3 const& direction) const;
+
+	glm::vec3 world_to_obj_position(glm::vec3 const& position) const;
+	glm::vec3 world_to_obj_direction(glm::vec3 const& direction) const;
 
 	virtual Hitpoint intersect(Ray const& ray) const = 0;
 	virtual glm::vec3 normal(glm::vec3 const& point) const = 0;

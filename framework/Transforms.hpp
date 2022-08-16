@@ -9,7 +9,7 @@ struct Translation {
 
 struct Rotation {
     float angle = 0.0f;
-    glm::vec3 vector {0.0f, 0.0f, 0.0f};
+    glm::vec3 vector {1.0f, 1.0f, 1.0f};
 };
 
 struct Scaling {
