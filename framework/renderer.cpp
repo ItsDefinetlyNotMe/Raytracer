@@ -6,6 +6,7 @@
 //
 // Renderer
 // -----------------------------------------------------------------------------
+#define GLM_FORCE_RADIANS
 #define _USE_MATH_DEFINES
 #include "renderer.hpp"
 #include <glm/gtx/rotate_vector.hpp>
@@ -26,13 +27,21 @@ void Renderer::render()
     float d = sin((camera_.fov_x_ / 2.0f) * (M_PI / 180.0f));
     float distance = (int)(width_ / 2.0f) / d;
 
-    for (unsigned y = 0; y < height_; ++y) {
-        for (unsigned x = 0; x < width_; ++x) {
+    for (unsigned int y = 0; y < height_; ++y) {
+        for (unsigned int x = 0; x < width_; ++x) {
             Pixel p(x, y);
 
-            int x_normalized = x - (int)((float) width_ / 2.0f);
-            int y_normalized = y - (int)((float)height_ / 2.0f);
-            Ray prim_ray{ camera_.position_,glm::normalize(glm::vec3{ x_normalized,y_normalized,-distance }) };
+            // offset by 0.5f to shoot through the middle of the pixel
+            float screen_x = (float) x - ((float) width_ / 2.0f) + 0.5f;
+            float screen_y = (float) y - ((float) height_ / 2.0f) + 0.5f;
+
+            Ray prim_ray {glm::vec3(0, 0, 0), glm::normalize(glm::vec3{screen_x, screen_y, -distance})};
+
+            glm::mat4 view = glm::lookAt(camera_.position_, camera_.front_, camera_.up_);
+            glm::mat4 inv_view = glm::inverse(view);
+
+            prim_ray.origin = glm::vec3(inv_view * glm::vec4(prim_ray.origin, 1.0f));
+            prim_ray.direction = glm::vec3(inv_view * glm::vec4(prim_ray.direction, 0.0f));
 
             p.color = trace_ray_second(prim_ray);
             p.color = Color{ p.color.r / (p.color.r + 1),p.color.g / (p.color.g + 1),p.color.b / (p.color.b + 1) };

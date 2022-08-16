@@ -118,7 +118,7 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
                 glm::vec3 up{ 0.0f,1.0f,0.0f };
                 
                 iss >> camera_name >> fov_x >> eye.x >> eye.y >> eye.z >> dir.x >> dir.y >> dir.z >> up.x >> up.y >> up.z;
-                cameras.push_back(std::make_shared<Camera>(Camera{camera_name,fov_x}));
+                cameras.push_back(std::make_shared<Camera>(Camera{camera_name, fov_x, eye, dir, up}));
             }
             else if ("ambient" == keyword){
                 //ambient [ambient]
