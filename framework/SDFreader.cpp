@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <algorithm>
 #include <glm/vec3.hpp>
 
 #include "SDFreader.hpp"
@@ -123,6 +124,28 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
             else if ("ambient" == keyword){
                 //ambient [ambient]
                 iss >> ambient.r >> ambient.g >> ambient.b;
+            }
+        }
+        else if ("transform" == keyword) {
+            std::string shape_name;
+            iss >> shape_name;
+            auto find_shape = [&](std::shared_ptr<Shape> const& shape) -> bool {return shape_name == shape->get_name();};
+            auto shape = *std::find_if(shapes.begin(), shapes.end(), find_shape);
+            iss >> keyword;
+            if ("translate" == keyword) {
+                Translation translation;
+                iss >> translation.translate.x >> translation.translate.y >> translation.translate.z;
+                shape->set_translation(translation);
+            }
+            else if ("rotate" == keyword) {
+                Rotation rot;
+                iss >> rot.angle >> rot.vector.x >> rot.vector.y >> rot.vector.z;
+                shape->set_rotation(rot);
+            }
+            else if ("scale" == keyword) {
+                Scaling scale;
+                iss >> scale.scale;
+                shape->set_scaling(scale);
             }
         }
         else if ("render" == keyword) {

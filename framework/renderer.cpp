@@ -22,10 +22,12 @@ Renderer::Renderer(unsigned w, unsigned h, std::string const& file,Camera const&
   , ppm_(width_, height_)
 {}
 
+#include <glm/gtx/string_cast.hpp>
+
 void Renderer::render()
 {
     float d = sin((camera_.fov_x_ / 2.0f) * (M_PI / 180.0f));
-    float distance = (int)(width_ / 2.0f) / d;
+    float distance = ((float)width_ / 2.0f) / d;
 
     for (unsigned int y = 0; y < height_; ++y) {
         for (unsigned int x = 0; x < width_; ++x) {
@@ -37,7 +39,7 @@ void Renderer::render()
 
             Ray prim_ray {glm::vec3(0, 0, 0), glm::normalize(glm::vec3{screen_x, screen_y, -distance})};
 
-            glm::mat4 view = glm::lookAt(camera_.position_, camera_.front_, camera_.up_);
+            glm::mat4 view = glm::lookAt(camera_.position_, camera_.position_ + camera_.front_, camera_.up_);
             glm::mat4 inv_view = glm::inverse(view);
 
             prim_ray.origin = glm::vec3(inv_view * glm::vec4(prim_ray.origin, 1.0f));
@@ -105,7 +107,6 @@ Color Renderer::trace_ray_second(Ray const& prim_ray) const {
 }
 
 Color Renderer::lightning(Hitpoint const& hitpoint,std::shared_ptr<Shape> const& object_hit) const {
-    
     Color pixel_color{ scene_.ambient_ * hitpoint.mat->ka_ };
     //ambient
     float epsilon = 0.0005f;
@@ -115,10 +116,11 @@ Color Renderer::lightning(Hitpoint const& hitpoint,std::shared_ptr<Shape> const&
         Ray secondary_ray {offset_hitpoint, glm::normalize(light->position_ - offset_hitpoint)};
         for (auto const& object : scene_.world_) {
             Hitpoint hitp = object->intersect(secondary_ray);
-                if (hitp.hit) {
-                    obstructed = true;
-                    break;
-                }
+            // für innenräume müssen wir checken das die distanz zum licht größer ist als zum hindernis
+            if (hitp.hit && hitp.t < glm::length(light->position_ - offset_hitpoint)) {
+                obstructed = true;
+                break;
+            }
         }
         if (!obstructed) {
             //diffuse
