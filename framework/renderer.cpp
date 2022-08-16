@@ -108,13 +108,14 @@ Color Renderer::lightning(Hitpoint const& hitpoint,std::shared_ptr<Shape> const&
     
     Color pixel_color{ scene_.ambient_ * hitpoint.mat->ka_ };
     //ambient
-    float epsilon = 0.01f;
+    float epsilon = 0.0005f;
     for (auto const& light : scene_.lights_){
         bool obstructed = false;
-        Ray secondary_ray{ hitpoint.point3d ,glm::normalize(light->position_ - hitpoint.point3d)};
+        glm::vec3 offset_hitpoint = hitpoint.point3d + object_hit->normal(hitpoint.point3d) * epsilon;
+        Ray secondary_ray {offset_hitpoint, glm::normalize(light->position_ - offset_hitpoint)};
         for (auto const& object : scene_.world_) {
             Hitpoint hitp = object->intersect(secondary_ray);
-                if (hitp.hit && hitp.t >= epsilon) {
+                if (hitp.hit) {
                     obstructed = true;
                     break;
                 }

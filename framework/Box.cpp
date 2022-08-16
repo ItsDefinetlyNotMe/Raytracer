@@ -28,7 +28,7 @@ std::ostream& Box::print(std::ostream& os) const {
 Hitpoint Box::intersect(Ray const& ray) const {
 	
 	//vlt eleganter ?
-	bool not_inside = true;//true = rückseite sehen
+	bool not_inside = true;//true = rï¿½ckseite sehen
 	if (ray.origin.x > min_.x && ray.origin.x < max_.x && ray.origin.y > min_.y && ray.origin.y < max_.y && ray.origin.z > min_.z && ray.origin.z < max_.z) {
 		not_inside = false;
 	}
@@ -119,22 +119,22 @@ glm::vec3 Box::normal(glm::vec3 const& point) const {
 	//!!Assumption point is on the box surface
 	//! FLOATS
 	if (floating_equal<float>(point.x, min_.x))
-		return -glm::normalize(glm::vec3{ max_.x,min_.y,min_.z } - min_);
+		return glm::vec3 {-1,  0,  0};
 
 	else if (floating_equal<float>(point.x,max_.x))
-		return -glm::normalize(min_ - glm::vec3{ max_.x,min_.y,min_.z });
+		return glm::vec3 { 1,  0,  0};
 
 	else if (floating_equal<float>(point.y,min_.y))
-		return -glm::normalize(glm::vec3{ min_.x,max_.y,min_.z } - min_);
+		return glm::vec3 { 0, -1,  0};
 
 	else if (floating_equal<float>(point.y,max_.y))
-		return -glm::normalize(min_ - glm::vec3{ min_.x,max_.y,min_.z });
+		return glm::vec3 { 0,  1,  0};
 
 	else if (floating_equal<float>(point.z,min_.z))
-		return -glm::normalize(glm::vec3{ min_.x,min_.y,max_.z } - min_);
+		return glm::vec3 { 0,  0, -1};
 
 	else if (floating_equal<float>(point.z,max_.z))
-		return -glm::normalize(min_ - glm::vec3{ min_.x,min_.y,max_.z });
+		return glm::vec3 { 0,  0,  1};
 
 	return glm::vec3{};
 }
