@@ -10,7 +10,6 @@ private:
 public:
 	Box(glm::vec3 const& mi, glm::vec3 const& ma);
 	Box(std::string const& n, std::shared_ptr<Material> const& mat, glm::vec3 const& mi, glm::vec3 const& ma);
-	~Box();
 
 
 	float area() const;

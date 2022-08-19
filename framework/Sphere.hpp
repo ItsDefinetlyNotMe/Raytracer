@@ -13,7 +13,6 @@ public:
 	Sphere(glm::vec3 const& c);
 	Sphere(glm::vec3 const& c, float r);
 	Sphere(std::string const& s, std::shared_ptr<Material> const& mat, glm::vec3 const& c, float r);
-	~Sphere();
 
 	float area() const override;
 	float volume() const override;

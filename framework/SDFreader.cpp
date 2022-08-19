@@ -6,6 +6,7 @@
 #include <glm/vec3.hpp>
 
 #include "SDFreader.hpp"
+#include "Composite.hpp"
 #include "Box.hpp"
 #include "Sphere.hpp"
 
@@ -94,6 +95,22 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
                     // !!Annahme!! Material wird vor Box deklariert
                     shapes.push_back(std::make_shared<Box>(Box{box_name,find(materials,mat_name),min,max}));
                 }
+                else if ("composite" == keyword) {
+                    std::string composite_name;
+                    iss >> composite_name;
+                    std::vector<std::string> children_names;
+                    std::string name;
+                    while(iss>>name) 
+                        children_names.push_back(name);
+                    std::vector<std::shared_ptr<Shape>> children;
+                    for (auto const& name : children_names) {
+                        auto find_shape = [&](std::shared_ptr<Shape> const& shape) -> bool {return name == shape->get_name();};
+                        auto shape = *std::find_if(shapes.begin(), shapes.end(), find_shape);
+                        children.push_back(shape);
+                    }
+
+                    shapes.push_back(std::make_shared<Composite>(Composite(composite_name, children)));
+                }
             }
             else if ("light" == keyword) {
                 //define light <name> [pos] [color] [brightness]
@@ -154,7 +171,15 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
         }
     }
 
-    Scene s{ shapes,cameras,lights,ambient };
+    // Scene s{ shapes,cameras,lights,ambient };
+    auto find_shape = [&](std::shared_ptr<Shape> const& shape) -> bool {return "root" == shape->get_name();};
+    auto root = *std::find_if(shapes.begin(), shapes.end(), find_shape);
+    if (nullptr == root) {
+        std::cout<<"No root node"<<std::endl;
+        exit(-1);
+    }
+    root->create_bounding_box();
+    Scene s {root, cameras, lights, ambient};
     rend = std::make_shared<Renderer>(Renderer{ x_res,y_res,filename,*find(cameras,cam_name),s});
     sdf_filestream.close();
     return rend;

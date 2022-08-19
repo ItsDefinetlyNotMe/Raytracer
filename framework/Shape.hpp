@@ -21,12 +21,12 @@ private:
 	Rotation rotation_;
 	Scaling scale_;
 	glm::mat4 model_;
+	glm::mat4 rot_mat_ = glm::mat4(1.0f); // identity
 	Bounding_Box bounding_box_;
 public:
 	Shape(std::string const& s);
 	Shape(std::string const& s, std::shared_ptr<Material> const& m);
 	Shape();
-	virtual ~Shape();
 
 
 	virtual float area() const = 0;

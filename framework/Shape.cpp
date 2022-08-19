@@ -47,10 +47,14 @@ void Shape::set_bounding_box(Bounding_Box const& bounding_box) {
 void Shape::update_model_matrix() {
 	glm::mat4 translation_mat = glm::translate(glm::mat4(), translation_.translate);
 	glm::mat4 rotation_mat = glm::rotate(rotation_.angle, rotation_.vector);
+
 	// uniform scaling for now
 	glm::mat4 scale_mat = glm::scale(glm::vec3(scale_.scale));
 
-	model_ = translation_mat * rotation_mat * scale_mat;
+	// keeping track of previous rotations if we want multiple
+	rot_mat_ = rot_mat_ * rotation_mat;
+
+	model_ = translation_mat * rot_mat_ * scale_mat;
 }
 
 glm::vec3 Shape::obj_to_world_position(glm::vec3 const& position) const{
@@ -70,7 +74,8 @@ glm::vec3 Shape::world_to_obj_direction(glm::vec3 const& direction) const{
 }
 
 bool Shape::intersect_bounding_box(Ray const& ray) const{
-	// bb is axis aligned and in word space
+
+	// bb is axis aligned in current space
 	bool not_inside = true;//true = r�ckseite sehen
 	if (ray.origin.x > bounding_box_.min_.x && ray.origin.x < bounding_box_.max_.x && ray.origin.y > bounding_box_.min_.y && ray.origin.y < bounding_box_.max_.y && ray.origin.z > bounding_box_.min_.z && ray.origin.z < bounding_box_.max_.z) {
 		not_inside = false;

@@ -28,7 +28,7 @@ Hitpoint Sphere::intersect(Ray const& r) const {
 
 	float world_t = t * Shape::get_scale();
 
-	return Hitpoint{ hit, world_t,Shape::get_name(),Shape::get_material(),r.origin + r.direction * world_t,r.direction };
+	return Hitpoint{ hit, world_t,Shape::get_name(),Shape::get_material(),r.origin + r.direction * world_t, r.direction, normal(r.origin + r.direction * world_t) };
 }
 
 glm::vec3 Sphere::normal(glm::vec3 const& point) const {
@@ -38,12 +38,14 @@ glm::vec3 Sphere::normal(glm::vec3 const& point) const {
 Bounding_Box Sphere::create_bounding_box() {
 	Bounding_Box bb;
 
-	bb.min_ = glm::vec3(center_.x - radius_ * Shape::get_scale(),
-						center_.y - radius_ * Shape::get_scale(),
-						center_.z - radius_ * Shape::get_scale());
-	bb.max_ = glm::vec3(center_.x + radius_ * Shape::get_scale(),
-						center_.y + radius_ * Shape::get_scale(),
-						center_.z + radius_ * Shape::get_scale());
+	glm::vec3 w_center = obj_to_world_position(center_);
+
+	bb.min_ = glm::vec3(w_center.x - radius_ * Shape::get_scale(),
+						w_center.y - radius_ * Shape::get_scale(),
+						w_center.z - radius_ * Shape::get_scale());
+	bb.max_ = glm::vec3(w_center.x + radius_ * Shape::get_scale(),
+						w_center.y + radius_ * Shape::get_scale(),
+						w_center.z + radius_ * Shape::get_scale());
 	
 	Shape::set_bounding_box(bb);
 	return bb;

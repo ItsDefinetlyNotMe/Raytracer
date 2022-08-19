@@ -8,8 +8,7 @@ class Composite : public Shape {
 private:
     std::vector<std::shared_ptr<Shape>> children_;
 public:
-	Composite(std::string const& n, std::vector<std::shared_ptr<Shape>> children);
-	~Composite();
+	Composite(std::string const& n, std::vector<std::shared_ptr<Shape>> const& children);
 
 	inline float area() const {return 0;};
 	inline float volume() const {return 0;};
