@@ -6,7 +6,7 @@
 #include "Material.hpp"
 struct Hitpoint {
 	bool hit{ false };
-	float t{ 0 };
+	float t = 1.0f/0.0f; // +infinity
 	std::string name{ "" };
 	std::shared_ptr<Material> mat{};
 	glm::vec3 point3d{ 0.0f,0.0f,0.0f };

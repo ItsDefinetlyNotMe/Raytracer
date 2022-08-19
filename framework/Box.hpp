@@ -1,3 +1,6 @@
+#ifndef BOX_HPP
+#define BOX_HPP
+
 #include "Shape.hpp"
 #include "color.hpp"
 class Box :public Shape {
@@ -15,5 +18,8 @@ public:
 	std::ostream& print(std::ostream& os) const override;
 	Hitpoint intersect(Ray const& ray) const override;
 	glm::vec3 normal(glm::vec3 const& point) const override;
+	Bounding_Box create_bounding_box() override;
 };
 //std::ostream& operator<<(std::ostream& os, Box const& b);
+
+#endif // BOX_HPP

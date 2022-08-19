@@ -4,7 +4,6 @@
 
 Sphere::Sphere(glm::vec3 const& c, float r) :Shape{}, center_{ c }, radius_{ r } {}
 Sphere::Sphere(std::string const& s, std::shared_ptr<Material> const& mat, glm::vec3 const& c, float r) : Shape{ s,mat }, center_{ c }, radius_{ r } {}
-Sphere::~Sphere() { std::cout << "Destruktor Sphere" << std::endl; };
 
 float Sphere::area() const {
 	return M_PI * 4 * pow(radius_, 2);
@@ -19,6 +18,8 @@ std::ostream& Sphere::print(std::ostream& os) const {
 }
 
 Hitpoint Sphere::intersect(Ray const& r) const {
+	// if (!Shape::intersect_bounding_box(r)) return Hitpoint{};
+
 	float t;
 
 	Ray obj_ray = {world_to_obj_position(r.origin), glm::normalize(world_to_obj_direction(r.direction))};
@@ -34,3 +35,16 @@ glm::vec3 Sphere::normal(glm::vec3 const& point) const {
 	return glm::normalize(point - Shape::obj_to_world_position(center_));
 }
 
+Bounding_Box Sphere::create_bounding_box() {
+	Bounding_Box bb;
+
+	bb.min_ = glm::vec3(center_.x - radius_ * Shape::get_scale(),
+						center_.y - radius_ * Shape::get_scale(),
+						center_.z - radius_ * Shape::get_scale());
+	bb.max_ = glm::vec3(center_.x + radius_ * Shape::get_scale(),
+						center_.y + radius_ * Shape::get_scale(),
+						center_.z + radius_ * Shape::get_scale());
+	
+	Shape::set_bounding_box(bb);
+	return bb;
+}

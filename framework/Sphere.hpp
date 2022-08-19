@@ -20,6 +20,7 @@ public:
 	std::ostream& print(std::ostream& os) const override;
 	Hitpoint intersect(Ray const& r) const override;
 	glm::vec3 normal(glm::vec3 const& point) const override;
+	Bounding_Box create_bounding_box() override;
 };
 
 //std::ostream& operator<<(std::ostream& os, Sphere const& s);
