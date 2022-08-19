@@ -53,78 +53,51 @@ void Renderer::render()
   ppm_.save(filename_);
 }
 
-Color Renderer::trace_ray(float x, float y) const {
-
-    float fov_rad = camera_.fov_x_ * (M_PI / 180.0f);
-
-    float camera_x = x * tanf(fov_rad / 2.0f) * ((float)width_ / (float)height_);
-    float camera_y = y * tanf(fov_rad / 2.0f);
-
-    glm::vec3 prim_ray_dir_n{ glm::normalize(glm::vec3{camera_x, camera_y, -1.0f }) };
-    Ray prim_ray{ camera_.position_,prim_ray_dir_n };
-    Hitpoint closest_hitpoint;
-    closest_hitpoint.t = INFINITY;
-
-    std::shared_ptr<Shape>object_hit;
-
-    Color pixel_color = Color{0.0f,0.0f,0.0f};
-    /////////////////////////////////////////////
-    for (auto const& objects : scene_.world_) {
-        Hitpoint hitp = objects->intersect(prim_ray);
-        if (hitp.hit && hitp.t < closest_hitpoint.t) {
-            closest_hitpoint = hitp;
-            object_hit = objects;
-        }
-    }
-    //secondary ray
-    if (closest_hitpoint.hit) 
-        pixel_color += lightning(closest_hitpoint, object_hit);
-    
-    return pixel_color;
-}
-
 Color Renderer::trace_ray_second(Ray const& prim_ray) const {
-    Hitpoint closest_hitpoint;
-    closest_hitpoint.t = INFINITY;
-
-    std::shared_ptr<Shape>object_hit;
-
     Color pixel_color = Color{ 0.0f,0.0f,0.0f };
     /////////////////////////////////////////////
-    for (auto const& objects : scene_.world_) {
-        Hitpoint hitp = objects->intersect(prim_ray);
-        if (hitp.hit && hitp.t < closest_hitpoint.t) {
-            closest_hitpoint = hitp;
-            object_hit = objects;
-        }
-    }
+    // for (auto const& objects : scene_.world_) {
+    //     Hitpoint hitp = objects->intersect(prim_ray);
+    //     if (hitp.hit && hitp.t < closest_hitpoint.t) {
+    //         closest_hitpoint = hitp;
+    //         object_hit = objects;
+    //     }
+    // }
+
+    Hitpoint hitp = scene_.root_->intersect(prim_ray);
+
     //secondary ray
-    if (closest_hitpoint.hit)
-        pixel_color += lightning(closest_hitpoint, object_hit);
+    if (hitp.hit && hitp.t > 0.0f)
+        pixel_color += lightning(hitp);
 
     return pixel_color;
     return Color{};
 }
 
-Color Renderer::lightning(Hitpoint const& hitpoint,std::shared_ptr<Shape> const& object_hit) const {
+Color Renderer::lightning(Hitpoint const& hitpoint) const {
     Color pixel_color{ scene_.ambient_ * hitpoint.mat->ka_ };
     //ambient
     float epsilon = 0.0005f;
     for (auto const& light : scene_.lights_){
         bool obstructed = false;
-        glm::vec3 offset_hitpoint = hitpoint.point3d + object_hit->normal(hitpoint.point3d) * epsilon;
+        glm::vec3 offset_hitpoint = hitpoint.point3d + hitpoint.normal * epsilon;
         Ray secondary_ray {offset_hitpoint, glm::normalize(light->position_ - offset_hitpoint)};
-        for (auto const& object : scene_.world_) {
-            Hitpoint hitp = object->intersect(secondary_ray);
-            // für innenräume müssen wir checken das die distanz zum licht größer ist als zum hindernis
-            if (hitp.hit && hitp.t < glm::length(light->position_ - offset_hitpoint)) {
-                obstructed = true;
-                break;
-            }
-        }
+        // for (auto const& object : scene_.world_) {
+        //     Hitpoint hitp = object->intersect(secondary_ray);
+        //     // für innenräume müssen wir checken das die distanz zum licht größer ist als zum hindernis
+        //     if (hitp.hit && hitp.t < glm::length(light->position_ - offset_hitpoint)) {
+        //         obstructed = true;
+        //         break;
+        //     }
+        // }
+
+        Hitpoint hitp = scene_.root_->intersect(secondary_ray);
+        if (hitp.hit && hitp.t < glm::length(light->position_ - offset_hitpoint))
+            obstructed = true;
+
         if (!obstructed) {
             //diffuse
-            glm::vec3 normal_object_hit_n{ object_hit->normal(hitpoint.point3d) };
+            glm::vec3 normal_object_hit_n{ hitpoint.normal };
             float cos_omega = glm::dot(normal_object_hit_n, secondary_ray.direction);
             pixel_color += light->color_ * light->brightness_ * hitpoint.mat->kd_ * std::max(cos_omega,0.0f);
             

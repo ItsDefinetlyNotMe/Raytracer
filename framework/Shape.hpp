@@ -11,6 +11,8 @@
 #include <memory>
 #include "Material.hpp"
 #include "Transforms.hpp"
+#include "Bounding_Box.hpp"
+
 class Shape {
 private:
 	std::string name_{ "" };
@@ -19,11 +21,12 @@ private:
 	Rotation rotation_;
 	Scaling scale_;
 	glm::mat4 model_;
+	glm::mat4 rot_mat_ = glm::mat4(1.0f); // identity
+	Bounding_Box bounding_box_;
 public:
-	// Shape(std::string const& s, Color const& c);
+	Shape(std::string const& s);
 	Shape(std::string const& s, std::shared_ptr<Material> const& m);
 	Shape();
-	virtual ~Shape();
 
 
 	virtual float area() const = 0;
@@ -35,10 +38,13 @@ public:
 	std::string get_name() const;
 	glm::mat4 get_model_matrix() const;
 	float get_scale() const; // helpful for t
+	Bounding_Box get_bounding_box() const;
 
 	void set_translation(Translation const& translation);
 	void set_rotation(Rotation const& rot);
 	void set_scaling(Scaling const& scale);
+
+	void set_bounding_box(Bounding_Box const& bounding_box);
 
 	void update_model_matrix();
 
@@ -48,8 +54,11 @@ public:
 	glm::vec3 world_to_obj_position(glm::vec3 const& position) const;
 	glm::vec3 world_to_obj_direction(glm::vec3 const& direction) const;
 
+	bool intersect_bounding_box(Ray const& ray) const;
+
 	virtual Hitpoint intersect(Ray const& ray) const = 0;
 	virtual glm::vec3 normal(glm::vec3 const& point) const = 0;
+	virtual Bounding_Box create_bounding_box() = 0;
 };
 std::ostream& operator<<(std::ostream& os, Shape const& s);
 #endif // ! SHAPE_HPP

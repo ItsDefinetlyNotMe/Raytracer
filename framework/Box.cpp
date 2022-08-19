@@ -9,8 +9,6 @@ Box::Box(glm::vec3 const& mi, glm::vec3 const& ma) :min_{ mi }, max_{ ma }{
 
 Box::Box(std::string const& n, std::shared_ptr<Material> const& mat, glm::vec3 const& mi, glm::vec3 const& ma) : Shape{ n,mat }, min_{ mi }, max_{ ma } {}
 
-Box::~Box() { std::cout << "Destruktor Box" << std::endl; }
-
 float Box::area() const {
 	return abs((min_.x - max_.x) * (min_.y - max_.y) * 2) + abs((min_.y - max_.y) * (min_.z - max_.z) * 2) + abs((min_.z - max_.z) * (min_.x - max_.x) * 2);
 }
@@ -27,6 +25,8 @@ std::ostream& Box::print(std::ostream& os) const {
 //inside swapped with not_inside
 Hitpoint Box::intersect(Ray const& ray) const {
 	
+	// if (!Shape::intersect_bounding_box(ray)) return Hitpoint{};
+
 	Ray obj_ray = {world_to_obj_position(ray.origin), glm::normalize(world_to_obj_direction(ray.direction))};
 	
 	//vlt eleganter ?
@@ -40,7 +40,7 @@ Hitpoint Box::intersect(Ray const& ray) const {
 		float world_t = t * Shape::get_scale();
 		glm::vec3 world_temp { ray.origin + ray.direction * world_t };
 		if ((temp.z > min_.z && temp.z < max_.z) && (temp.y > min_.y && temp.y < max_.y) && t >= 0) {
-			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction };
+			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction, normal(world_temp) };
 		}
 	}
 	else if (obj_ray.direction.x > 0 != not_inside) {
@@ -49,7 +49,7 @@ Hitpoint Box::intersect(Ray const& ray) const {
 		float world_t = t * Shape::get_scale();
 		glm::vec3 world_temp { ray.origin + ray.direction * world_t };
 		if ((temp.z > min_.z && temp.z < max_.z) && (temp.y > min_.y && temp.y < max_.y) && t >= 0) {
-			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction };
+			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction, normal(world_temp) };
 		}
 	}
 
@@ -59,7 +59,7 @@ Hitpoint Box::intersect(Ray const& ray) const {
 		float world_t = t * Shape::get_scale();
 		glm::vec3 world_temp { ray.origin + ray.direction * world_t };
 		if ((temp.z > min_.z && temp.z < max_.z) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction };
+			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction, normal(world_temp) };
 		}
 	}
 	else if (obj_ray.direction.y > 0 != not_inside) {
@@ -68,7 +68,7 @@ Hitpoint Box::intersect(Ray const& ray) const {
 		float world_t = t * Shape::get_scale();
 		glm::vec3 world_temp { ray.origin + ray.direction * world_t };
 		if ((temp.z > min_.z && temp.z < max_.z) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction };
+			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction, normal(world_temp) };
 		}
 	}
 
@@ -78,7 +78,7 @@ Hitpoint Box::intersect(Ray const& ray) const {
 		float world_t = t * Shape::get_scale();
 		glm::vec3 world_temp { ray.origin + ray.direction * world_t };
 		if ((temp.y > min_.y && temp.y < max_.y) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction };
+			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction, normal(world_temp) };
 		}
 	}
 	else if (obj_ray.direction.z > 0 != not_inside) {
@@ -87,7 +87,7 @@ Hitpoint Box::intersect(Ray const& ray) const {
 		float world_t = t * Shape::get_scale();
 		glm::vec3 world_temp { ray.origin + ray.direction * world_t };
 		if ((temp.y > min_.y && temp.y < max_.y) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction };
+			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction, normal(world_temp) };
 		}
 	}
 	/*
@@ -154,4 +154,33 @@ glm::vec3 Box::normal(glm::vec3 const& point) const {
 		return glm::normalize(Shape::obj_to_world_direction(glm::vec3 { 0,  0,  1}));
 
 	return glm::vec3{};
+}
+
+Bounding_Box Box::create_bounding_box() {
+	// get all 8 transformed points and build bb from there
+	glm::vec3 points[8]; // c-style array should be fine
+	points[0] = obj_to_world_position(min_);
+	points[1] = obj_to_world_position(glm::vec3(min_.x, min_.y, max_.z));
+	points[2] = obj_to_world_position(glm::vec3(min_.x, max_.y, min_.z));
+	points[3] = obj_to_world_position(glm::vec3(min_.x, max_.y, max_.z));
+	points[4] = obj_to_world_position(glm::vec3(max_.x, min_.y, min_.z));
+	points[5] = obj_to_world_position(glm::vec3(max_.x, min_.y, max_.z));
+	points[6] = obj_to_world_position(glm::vec3(max_.x, max_.y, min_.z));
+	points[7] = obj_to_world_position(max_);
+
+	glm::vec3 min = points[0];
+	glm::vec3 max = points[1];
+	for (int i = 0; i < 8; ++i) {
+		if (min.x > points[i].x) min.x = points[i].x;
+		if (min.y > points[i].y) min.y = points[i].y;
+		if (min.z > points[i].z) min.z = points[i].z;
+		if (max.x < points[i].x) max.x = points[i].x;
+		if (max.y < points[i].y) max.y = points[i].y;
+		if (max.z < points[i].z) max.z = points[i].z;
+	}
+
+	Bounding_Box bb {min, max};
+
+	Shape::set_bounding_box(bb);
+	return bb;
 }
