@@ -69,9 +69,6 @@ Hitpoint Cone::intersect(Ray const& ray) const {
 	}
 }
 
-	return point;
-}
-
 glm::vec3 Cone::normal(glm::vec3 const& point) const {
 	glm::vec3 obj_point = Shape::world_to_obj_position(point);
 	if (floating_equal<float>(obj_point.y, bottom_.y))
