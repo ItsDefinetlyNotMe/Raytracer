@@ -9,6 +9,7 @@
 #include <cmath>
 #include <string>
 #include <memory>
+#include <vector>
 #include "Material.hpp"
 #include "Transforms.hpp"
 #include "Bounding_Box.hpp"
@@ -18,10 +19,9 @@ private:
 	std::string name_{ "" };
 	std::shared_ptr<Material> mat_;
 	Translation translation_;
-	Rotation rotation_;
+	std::vector<Rotation> rotations_;
 	Scaling scale_;
 	glm::mat4 model_;
-	glm::mat4 rot_mat_ = glm::mat4(1.0f); // identity
 	Bounding_Box bounding_box_;
 public:
 	Shape(std::string const& s);

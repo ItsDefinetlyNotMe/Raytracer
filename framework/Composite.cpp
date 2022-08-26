@@ -5,9 +5,9 @@ Composite::Composite(std::string const& n, std::vector<std::shared_ptr<Shape>> c
 Hitpoint Composite::intersect(Ray const& ray) const {
     Hitpoint hitpoint;
 
-    Ray comp_ray = Ray{world_to_obj_position(ray.origin), glm::normalize(world_to_obj_direction(ray.direction))};
-
     if (!Shape::intersect_bounding_box(ray)) return hitpoint;
+
+    Ray comp_ray = Ray{world_to_obj_position(ray.origin), glm::normalize(world_to_obj_direction(ray.direction))};
 
     for (auto const& child : children_) {
         Hitpoint temp = child->intersect(comp_ray);
@@ -26,8 +26,9 @@ Bounding_Box Composite::create_bounding_box() {
     Bounding_Box bb;
     for (auto const& child : children_) {
         Bounding_Box c_bb = child->create_bounding_box();
-        c_bb.min_ = obj_to_world_position(c_bb.min_);
-        c_bb.max_ = obj_to_world_position(c_bb.max_);
+
+        glm::vec3 min = obj_to_world_position(c_bb.min_);
+        glm::vec3 max = obj_to_world_position(c_bb.max_);
 
         glm::vec3 points[8]; // c-style array should be fine
         points[0] = obj_to_world_position(c_bb.min_);
@@ -40,24 +41,24 @@ Bounding_Box Composite::create_bounding_box() {
         points[7] = obj_to_world_position(c_bb.max_);
 
         for (int i = 0; i < 8; ++i) {
-            if (c_bb.min_.x > points[i].x) c_bb.min_.x = points[i].x;
-            if (c_bb.min_.y > points[i].y) c_bb.min_.y = points[i].y;
-            if (c_bb.min_.z > points[i].z) c_bb.min_.z = points[i].z;
-            if (c_bb.max_.x < points[i].x) c_bb.max_.x = points[i].x;
-            if (c_bb.max_.y < points[i].y) c_bb.max_.y = points[i].y;
-            if (c_bb.max_.z < points[i].z) c_bb.max_.z = points[i].z;
+            if (min.x > points[i].x) min.x = points[i].x;
+            if (min.y > points[i].y) min.y = points[i].y;
+            if (min.z > points[i].z) min.z = points[i].z;
+            if (max.x < points[i].x) max.x = points[i].x;
+            if (max.y < points[i].y) max.y = points[i].y;
+            if (max.z < points[i].z) max.z = points[i].z;
         }
 
         if (first) {
-            bb = c_bb;
+            bb = Bounding_Box{min, max};
             first = false;
         } else {
-            if (bb.min_.x > c_bb.min_.x) bb.min_.x = c_bb.min_.x;
-            if (bb.min_.y > c_bb.min_.y) bb.min_.y = c_bb.min_.y;
-            if (bb.min_.z > c_bb.min_.z) bb.min_.z = c_bb.min_.z;
-            if (bb.max_.x < c_bb.max_.x) bb.max_.x = c_bb.max_.x;
-            if (bb.max_.y < c_bb.max_.y) bb.max_.y = c_bb.max_.y;
-            if (bb.max_.z < c_bb.max_.z) bb.max_.z = c_bb.max_.z;
+            if (bb.min_.x > min.x) bb.min_.x = min.x;
+            if (bb.min_.y > min.y) bb.min_.y = min.y;
+            if (bb.min_.z > min.z) bb.min_.z = min.z;
+            if (bb.max_.x < max.x) bb.max_.x = max.x;
+            if (bb.max_.y < max.y) bb.max_.y = max.y;
+            if (bb.max_.z < max.z) bb.max_.z = max.z;
         }
     }
     Shape::set_bounding_box(bb);
