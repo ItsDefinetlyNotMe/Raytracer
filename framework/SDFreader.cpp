@@ -9,6 +9,9 @@
 #include "Composite.hpp"
 #include "Box.hpp"
 #include "Sphere.hpp"
+#include "Cone.hpp"
+#include "Cylinder.hpp"
+#include "Triangle.hpp"
 
 
 //mag ich nicht!!
@@ -95,7 +98,54 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
                     // !!Annahme!! Material wird vor Box deklariert
                     shapes.push_back(std::make_shared<Box>(Box{box_name,find(materials,mat_name),min,max}));
                 }
+                else if ("cone" == keyword) {
+                    //define shape cone <name> [bottom] [height] [radius] <mat-name>
+                    std::string cone_name;
+                    glm::vec3 bottom{};
+                    float height;
+                    float radius;
+                    std::string mat_name;
+
+                    iss >> cone_name;
+                    iss >> bottom.x >> bottom.y >> bottom.z;
+                    iss >> height >> radius;
+                    iss >> mat_name;
+                    
+                    shapes.push_back(std::make_shared<Cone>(Cone{cone_name,find(materials,mat_name), bottom, radius, height}));
+                }
+                else if ("cylinder" == keyword) {
+                    //define shape cylinder <name> [center] [height] [radius] <mat-name>
+                    std::string cylinder_name;
+                    glm::vec3 bottom;
+                    float height;
+                    float radius;
+                    std::string mat_name;
+
+                    iss >> cylinder_name;
+                    iss >> bottom.x >> bottom.y >> bottom.z;
+                    iss >> height >> radius;
+                    iss >> mat_name;
+                    
+                    shapes.push_back(std::make_shared<Cylinder>(Cylinder{cylinder_name,find(materials,mat_name), bottom, radius, height}));
+                }
+                else if ("triangle" == keyword) {
+                    //define shape triangle <name> [v1] [v2] [v3] <mat-name>
+                    std::string triangle_name;
+                    glm::vec3 v1;
+                    glm::vec3 v2;
+                    glm::vec3 v3;
+                    std::string mat_name;
+
+                    iss >> triangle_name;
+                    iss >> v1.x >> v1.y >> v1.z;
+                    iss >> v2.x >> v2.y >> v2.z;
+                    iss >> v3.x >> v3.y >> v3.z;
+                    iss >> mat_name;
+                    
+                    shapes.push_back(std::make_shared<Triangle>(Triangle{triangle_name,find(materials,mat_name), v1, v2, v3}));
+                }
                 else if ("composite" == keyword) {
+                    // define shape composite <name> [shapes ..]
                     std::string composite_name;
                     iss >> composite_name;
                     std::vector<std::string> children_names;

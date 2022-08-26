@@ -1,3 +1,6 @@
+#ifndef CONE_HPP
+#define CONE_HPP
+
 #include "Shape.hpp"
 class Cone : public Shape {
 private:
@@ -5,12 +8,14 @@ private:
 	float height_;
 	glm::vec3 bottom_;
 public:
-	Cone(glm::vec3 b, float r, float);
-	~Cone();
+	Cone(std::string const& n, std::shared_ptr<Material> const& mat, glm::vec3 b, float r, float h);
 
 	float area() const override;
 	float volume() const override;
 	std::ostream& print(std::ostream& os) const override;
 	Hitpoint intersect(Ray const& ray) const override;
 	glm::vec3 normal(glm::vec3 const& point) const override;
+	Bounding_Box create_bounding_box() override;
 };
+
+#endif // CONE_HPP

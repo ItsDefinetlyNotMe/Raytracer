@@ -1,10 +1,8 @@
 #include "Cone.hpp"
 #include "helper.hpp"
 
-Cone::Cone(std::string const& n, std::shared_ptr<Material> const& m, glm::vec3 const& b, float r, float h) :Shape{n,m},bottom_ { b }, radius_{ r }, height_{ h } {}
-Cone::~Cone() {
-	std::cout << "Destructor Cone";
-};
+Cone::Cone(std::string const& n, std::shared_ptr<Material> const& mat, glm::vec3 b, float r, float h) : Shape(n, mat), bottom_(b), radius_(r), height_(h) {}
+
 float Cone::area() const {
 	return 0;
 }
@@ -17,57 +15,103 @@ std::ostream& Cone::print(std::ostream& os) const {
 	return Shape::print(os) << "position: " << "(" << bottom_.x << ", " << bottom_.y << ", " << bottom_.z << ")" << " radius: " << radius_ << ", height: " << height_;
 }
 
-
-
 Hitpoint Cone::intersect(Ray const& ray) const {
 	Ray obj_ray = { world_to_obj_position(ray.origin), glm::normalize(world_to_obj_direction(ray.direction)) };
-
-	Hitpoint point{};
-	float disb = ((bottom_.z - obj_ray.origin.z) / obj_ray.direction.z);//bottom.z = obj_ray-origin.z + disb * obj_ray.direction.z
-	float world_disb = disb * Shape::get_scale();
-	glm::vec3 pb = obj_ray.origin + disb * obj_ray.direction;
-
-	if (glm::length(pb - bottom_) <= radius_) {
-		if (world_disb >= 0.0f)
-				point =  { true, world_disb ,Shape::get_name(),Shape::get_material(),Shape::obj_to_world_position(pb) ,glm::normalize(Shape::obj_to_world_direction(obj_ray.direction)) };
-	}
-	//
-	glm::vec3 h_dach{ glm::vec3{0.0f,0.0f,bottom_.z - height_} / abs(bottom_.z - height_) };
-	glm::vec3 w{ obj_ray.origin - glm::vec3{bottom_.x,bottom_.y,bottom_.z + height_} };
-	float m = radius_ * radius_/pow(glm::length((glm::vec3{0.0f,0.0f,height_})),2);
-
-	float a = glm::dot(obj_ray.direction, obj_ray.direction) - m * pow(glm::dot(obj_ray.direction, h_dach), 2) - pow(glm::dot(obj_ray.direction, h_dach), 2);
-	float b = 2 * (glm::dot(obj_ray.direction, w) - m * glm::dot(obj_ray.direction, h_dach) * glm::dot(w, h_dach) - glm::dot(obj_ray.direction, h_dach) * glm::dot(w, h_dach));
-	float c = glm::dot(w, w) - m * pow(glm::dot(w, h_dach), 2) - pow(glm::dot(w, h_dach), 2);
 	
-	if (b * b - 4 * a * c < 0)
-		return Hitpoint{};
-	float t1 = (-b + sqrt(b*b -4 * a * c)) / (2 * a);
-	float t2 = (-b - sqrt(b * b - 4 * a * c)) / (2 * a);
-	
-	if (t1 <= t2 && t1 > 0) {
+	// cone is defined as x^2+y^2=z^2 , so we need a slope
+	float slope = radius_ / height_;
 
-		if (t1 * Shape::get_scale() < point.t) {
-			if ((obj_ray.origin + t1 * obj_ray.direction).z > bottom_.z && (obj_ray.origin + t1 * obj_ray.direction).z <= bottom_.z + height_)
-				point = { true, t1 * Shape::get_scale() ,Shape::get_name(),Shape::get_material(),Shape::obj_to_world_position(obj_ray.origin + t1 * obj_ray.direction) ,glm::normalize(Shape::obj_to_world_direction(obj_ray.direction)) };
-		}
+	// we need to offset the cone origin to (0, 0, 0)
+	obj_ray.origin = obj_ray.origin - bottom_ - glm::vec3{0, height_, 0};
+
+	// solve as unit cone
+	float a = obj_ray.direction.x * obj_ray.direction.x + 
+			  obj_ray.direction.z * obj_ray.direction.z -
+			  obj_ray.direction.y * obj_ray.direction.y * slope * slope;
+
+	float b = 2 * (obj_ray.origin.x * obj_ray.direction.x + 
+				   obj_ray.origin.z * obj_ray.direction.z -
+				   obj_ray.origin.y * obj_ray.direction.y * slope * slope);
+
+	float c = obj_ray.origin.x * obj_ray.origin.x + 
+			  obj_ray.origin.z * obj_ray.origin.z - 
+			  obj_ray.origin.y * obj_ray.origin.y * slope * slope;
+
+	float t1 = (-b - sqrtf(b*b - 4 * a * c)) / (2 * a);
+	float t2 = (-b + sqrtf(b*b - 4 * a * c)) / (2 * a);
+
+	float t;
+	if (t2 < t1) {
+		float temp = t1;
+		t1 = t2;
+		t2 = temp;
 	}
-	if (t2 <= t1 && t2 > 0) {
+	if (t1 >= 0.0f) t = t1;
+	else if (t2 >= 0.0f) t = t2;
+	else return Hitpoint{};
+
+	// check if inside y-range
+	glm::vec3 point_hit = obj_ray.origin + obj_ray.direction * t;
+	if (point_hit.y <= 0.0f && point_hit.y >= -height_) {
+		float world_t = t * Shape::get_scale();
+		glm::vec3 world_point_hit{ ray.origin + glm::normalize(ray.direction) * world_t };
+		return Hitpoint{ true, world_t ,Shape::get_name(),Shape::get_material(), world_point_hit,glm::normalize(ray.direction), normal(world_point_hit)};
+	} else {
+		float t3 = -obj_ray.origin.y / obj_ray.direction.y;
+		float t4 = (-height_ - obj_ray.origin.y) / obj_ray.direction.y;
+		if (t3 < t4 && t3 > 0.0f && t3 > t1 && t3 < t2) t = t3;
+		else if (t4 > 0.0f && t4 > t1 && t4 < t2) t = t4;
+		else return Hitpoint{};
 		
-		if (t2 * Shape::get_scale() < point.t) {
-			if ((obj_ray.origin + t2 * obj_ray.direction).z > bottom_.z && (obj_ray.origin + t2 * obj_ray.direction).z <= bottom_.z + height_)
-				point = { true, t2 * Shape::get_scale() ,Shape::get_name(),Shape::get_material(),Shape::obj_to_world_position(obj_ray.origin + t2 * obj_ray.direction) ,glm::normalize(Shape::obj_to_world_direction(obj_ray.direction)) };
-		}
+		float world_t = t * Shape::get_scale();
+		glm::vec3 world_point_hit{ ray.origin + glm::normalize(ray.direction) * world_t };
+		return Hitpoint{ true, world_t ,Shape::get_name(),Shape::get_material(), world_point_hit,glm::normalize(ray.direction), normal(world_point_hit)};
 	}
+}
 
 	return point;
 }
 
 glm::vec3 Cone::normal(glm::vec3 const& point) const {
 	glm::vec3 obj_point = Shape::world_to_obj_position(point);
-	if (floating_equal<float>(obj_point.z, bottom_.z))
-		return glm::normalize(obj_to_world_direction({ 0.0f,0.0f,-1.0f }));
+	if (floating_equal<float>(obj_point.y, bottom_.y))
+		return glm::normalize(obj_to_world_direction({ 0.0f, -1.0f, 0.0f }));
 	glm::vec3 norm{ obj_point - bottom_ };
-	norm.z = height_/radius_;
+	norm.y = 0.0f;
+	norm = glm::normalize(norm);
+	norm.x = norm.x * (height_ / radius_);
+	norm.z = norm.z * (height_ / radius_);
+	norm.y = radius_ / height_;
 	return glm::normalize(obj_to_world_direction(norm));
+}
+
+Bounding_Box Cone::create_bounding_box() {
+	// get all 8 transformed points and build bb from there
+
+	glm::vec3 min = bottom_ - glm::vec3(radius_, 0.0f, radius_);
+	glm::vec3 max = bottom_ + glm::vec3(radius_, height_, radius_);
+
+	glm::vec3 points[8]; // c-style array should be fine
+	points[0] = obj_to_world_position(min);
+	points[1] = obj_to_world_position(glm::vec3(min.x, min.y, max.z));
+	points[2] = obj_to_world_position(glm::vec3(min.x, max.y, min.z));
+	points[3] = obj_to_world_position(glm::vec3(min.x, max.y, max.z));
+	points[4] = obj_to_world_position(glm::vec3(max.x, min.y, min.z));
+	points[5] = obj_to_world_position(glm::vec3(max.x, min.y, max.z));
+	points[6] = obj_to_world_position(glm::vec3(max.x, max.y, min.z));
+	points[7] = obj_to_world_position(max);
+
+	for (int i = 0; i < 8; ++i) {
+		if (min.x > points[i].x) min.x = points[i].x;
+		if (min.y > points[i].y) min.y = points[i].y;
+		if (min.z > points[i].z) min.z = points[i].z;
+		if (max.x < points[i].x) max.x = points[i].x;
+		if (max.y < points[i].y) max.y = points[i].y;
+		if (max.z < points[i].z) max.z = points[i].z;
+	}
+
+	Bounding_Box bb {min, max};
+
+	Shape::set_bounding_box(bb);
+	return bb;
 }
