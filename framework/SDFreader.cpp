@@ -56,13 +56,20 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
                 Color ks{};// Specular Color
                 float m; // Specular Reflection Constant
 
+                float reflectivity = 0.0f;
+                float opacity = 0.0f;
+                float refractive_index = 1.0f;
+
                 iss >> name;
                 iss >> ka.r >> ka.g >> ka.b;
                 iss >> kd.r >> kd.g >> kd.b;
                 iss >> ks.r >> ks.g >> ks.b;
                 iss >> m;
+                iss >> reflectivity;
+                iss >> opacity;
+                iss >> refractive_index;
 
-                materials.push_back(std::make_shared<Material>(Material{ name,ka,kd,ks,m }));
+                materials.push_back(std::make_shared<Material>(Material{ name,ka,kd,ks,m, reflectivity, opacity, refractive_index }));
             }
             else if ("shape" == keyword) {
                 iss >> keyword;

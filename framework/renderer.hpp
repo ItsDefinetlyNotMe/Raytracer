@@ -26,10 +26,9 @@ public:
   void render();
   void write(Pixel const& p);
 
-  Color trace_ray(float x, float y) const;
-  Color lightning(Hitpoint const& h) const;
-  Color trace_ray_second(Ray const& prim_ray) const;
-
+  Color trace_primary(Ray const& prim_ray) const;
+  // 0 diffuse | 1 reflection | 2 refraction
+  Color trace_secondary(Hitpoint const& h, unsigned int depth, unsigned int type /*hier eher enum*/) const;
 
   inline std::vector<Color> const& color_buffer() const
   {

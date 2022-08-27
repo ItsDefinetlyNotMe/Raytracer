@@ -16,8 +16,12 @@ struct Material {
     Color kd_; // Diffuse Color
     Color ks_; // Specular Color
     
-
     float m_; // Specular Reflection Constant
+
+    float reflectivity_ = 0.0f;
+
+    float opacity_ = 1.0f;
+    float refractive_index_ = 1.0f;
 
     friend std::ostream& operator<<(std::ostream& out, Material const& mat) {
         out << "Material: " << mat.name_ << "\n"
