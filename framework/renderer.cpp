@@ -23,26 +23,33 @@ Renderer::Renderer(unsigned w, unsigned h, std::string const& file,Camera const&
 
 void Renderer::render()
 {
+    unsigned int samplesize = 4;
     float d = sin((camera_.fov_x_ / 2.0f) * (M_PI / 180.0f));
     float distance = ((float)width_ / 2.0f) / d;
 
     for (unsigned int y = 0; y < height_; ++y) {
         for (unsigned int x = 0; x < width_; ++x) {
             Pixel p(x, y);
+            p.color;
 
-            // offset by 0.5f to shoot through the middle of the pixel
-            float screen_x = (float) x - ((float) width_ / 2.0f) + 0.5f;
-            float screen_y = (float) y - ((float) height_ / 2.0f) + 0.5f;
+            for (unsigned int x_anti_aliasing = 0; x_anti_aliasing < samplesize / 2; ++x_anti_aliasing) {
+                for (unsigned int y_anti_aliasing = 0; y_anti_aliasing < samplesize / 2; ++y_anti_aliasing) {
+                    float screen_x = (float)x - ((float)width_ / 2.0f) +  (1+x_anti_aliasing*2)/ 4.0f;
+                    float screen_y = (float)y - ((float)height_ / 2.0f) + (y_anti_aliasing*2+1) / 4.0f;
 
-            Ray prim_ray {glm::vec3(0, 0, 0), glm::normalize(glm::vec3{screen_x, screen_y, -distance})};
+                    Ray prim_ray{ glm::vec3(0, 0, 0), glm::normalize(glm::vec3{screen_x, screen_y, -distance}) };
 
-            glm::mat4 view = glm::lookAt(camera_.position_, camera_.position_ + camera_.front_, camera_.up_);
-            glm::mat4 inv_view = glm::inverse(view);
+                    glm::mat4 view = glm::lookAt(camera_.position_, camera_.position_ + camera_.front_, camera_.up_);
+                    glm::mat4 inv_view = glm::inverse(view);
 
-            prim_ray.origin = glm::vec3(inv_view * glm::vec4(prim_ray.origin, 1.0f));
-            prim_ray.direction = glm::vec3(inv_view * glm::vec4(prim_ray.direction, 0.0f));
+                    prim_ray.origin = glm::vec3(inv_view * glm::vec4(prim_ray.origin, 1.0f));
+                    prim_ray.direction = glm::vec3(inv_view * glm::vec4(prim_ray.direction, 0.0f));
 
-            p.color = trace_primary(prim_ray);
+                    p.color += trace_primary(prim_ray);
+                }
+            }
+
+            p.color = Color{ p.color.r / samplesize, p.color.g / samplesize, p.color.b / samplesize };
             p.color = Color{ p.color.r / (p.color.r + 1),p.color.g / (p.color.g + 1),p.color.b / (p.color.b + 1) };
             write(p);
         }
