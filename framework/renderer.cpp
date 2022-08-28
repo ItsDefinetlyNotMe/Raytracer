@@ -23,7 +23,8 @@ Renderer::Renderer(unsigned w, unsigned h, std::string const& file,Camera const&
 
 void Renderer::render()
 {
-    unsigned int samplesize = 4;
+    unsigned int root_of_samplesize = 2;
+    unsigned int samplesize = pow(root_of_samplesize, 2);
     float d = sin((camera_.fov_x_ / 2.0f) * (M_PI / 180.0f));
     float distance = ((float)width_ / 2.0f) / d;
 
@@ -32,10 +33,10 @@ void Renderer::render()
             Pixel p(x, y);
             p.color;
 
-            for (unsigned int x_anti_aliasing = 0; x_anti_aliasing < samplesize / 2; ++x_anti_aliasing) {
-                for (unsigned int y_anti_aliasing = 0; y_anti_aliasing < samplesize / 2; ++y_anti_aliasing) {
-                    float screen_x = (float)x - ((float)width_ / 2.0f) +  (1+x_anti_aliasing*2)/ 4.0f;
-                    float screen_y = (float)y - ((float)height_ / 2.0f) + (y_anti_aliasing*2+1) / 4.0f;
+            for (unsigned int x_anti_aliasing = 0; x_anti_aliasing < root_of_samplesize; ++x_anti_aliasing) {
+                for (unsigned int y_anti_aliasing = 0; y_anti_aliasing < root_of_samplesize; ++y_anti_aliasing) {
+                    float screen_x = (float)x - ((float)width_ / 2.0f) + (1 + x_anti_aliasing * 2) / root_of_samplesize * (1.0f / 2.0f);
+                    float screen_y = (float)y - ((float)height_ / 2.0f) + (1 + y_anti_aliasing * 2) / root_of_samplesize * (1.0f / 2.0f);
 
                     Ray prim_ray{ glm::vec3(0, 0, 0), glm::normalize(glm::vec3{screen_x, screen_y, -distance}) };
 
