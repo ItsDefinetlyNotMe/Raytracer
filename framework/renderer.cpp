@@ -10,6 +10,7 @@
 #define _USE_MATH_DEFINES
 #include "renderer.hpp"
 #include <glm/gtx/rotate_vector.hpp>
+#include <thread>
 //added Camera to the mix
 //wenn es per const& �bergebn werden brauchen wir keinen pointer oder ?
 Renderer::Renderer(unsigned w, unsigned h, std::string const& file,Camera const& cam,Scene const& sce)
@@ -23,40 +24,66 @@ Renderer::Renderer(unsigned w, unsigned h, std::string const& file,Camera const&
 
 void Renderer::render()
 {
-    unsigned int root_of_samplesize = 2;
+    std::cout << "[........................................]";
+    std::cout << "\r[";
+    int i=0;
+    auto first = std::thread(&Renderer::ray_thread,this,std::ref(i));
+    auto second = std::thread(&Renderer::ray_thread, this,std::ref(i));
+    auto third = std::thread(&Renderer::ray_thread, this, std::ref(i));
+
+
+    first.join();
+    second.join();
+    third.join();
+    ppm_.save(filename_);
+}
+
+void Renderer::ray_thread(int& i) {
+    
+    unsigned int root_of_samplesize = 1;
     unsigned int samplesize = pow(root_of_samplesize, 2);
+
     float d = sin((camera_.fov_x_ / 2.0f) * (M_PI / 180.0f));
     float distance = ((float)width_ / 2.0f) / d;
 
-    for (unsigned int y = 0; y < height_; ++y) {
-        for (unsigned int x = 0; x < width_; ++x) {
-            Pixel p(x, y);
-            p.color;
-
-            for (unsigned int x_anti_aliasing = 0; x_anti_aliasing < root_of_samplesize; ++x_anti_aliasing) {
-                for (unsigned int y_anti_aliasing = 0; y_anti_aliasing < root_of_samplesize; ++y_anti_aliasing) {
-                    float screen_x = (float)x - ((float)width_ / 2.0f) + (1 + x_anti_aliasing * 2) / root_of_samplesize * (1.0f / 2.0f);
-                    float screen_y = (float)y - ((float)height_ / 2.0f) + (1 + y_anti_aliasing * 2) / root_of_samplesize * (1.0f / 2.0f);
-
-                    Ray prim_ray{ glm::vec3(0, 0, 0), glm::normalize(glm::vec3{screen_x, screen_y, -distance}) };
-
-                    glm::mat4 view = glm::lookAt(camera_.position_, camera_.position_ + camera_.front_, camera_.up_);
-                    glm::mat4 inv_view = glm::inverse(view);
-
-                    prim_ray.origin = glm::vec3(inv_view * glm::vec4(prim_ray.origin, 1.0f));
-                    prim_ray.direction = glm::vec3(inv_view * glm::vec4(prim_ray.direction, 0.0f));
-
-                    p.color += trace_primary(prim_ray);
-                }
-            }
-
-            p.color = Color{ p.color.r / samplesize, p.color.g / samplesize, p.color.b / samplesize };
-            p.color = Color{ p.color.r / (p.color.r + 1),p.color.g / (p.color.g + 1),p.color.b / (p.color.b + 1) };
-            write(p);
+    while (i < height_ * width_) {
+        int j = i++;
+        //for (unsigned int i = 0; i < height_ * width_; ++i) {// -1
+        unsigned int x = j % width_;
+        unsigned int y = j / width_;
+        if (j % (int)(width_*height_/40) == 0)
+        {
+            std::cout << "|";
+            std::cout.flush();
         }
+        Pixel p(x, y);
+        //std::cout << "x: " << x << "y: " << y << std::endl;
+      
+        for (unsigned int x_anti_aliasing = 0; x_anti_aliasing < root_of_samplesize; ++x_anti_aliasing) {
+            for (unsigned int y_anti_aliasing = 0; y_anti_aliasing < root_of_samplesize; ++y_anti_aliasing) {
+
+                float screen_x = (float)x - ((float)width_ / 2.0f) + (1 + x_anti_aliasing * 2) / root_of_samplesize * (1.0f / 2.0f);
+                float screen_y = (float)y - ((float)height_ / 2.0f) + (1 + y_anti_aliasing * 2) / root_of_samplesize * (1.0f / 2.0f);
+
+                Ray prim_ray{ glm::vec3{0.0f, 0.0f, 0.0f}, glm::normalize(glm::vec3{screen_x, screen_y, -distance}) };
+
+                glm::mat4 view = glm::lookAt(camera_.position_, camera_.position_ + camera_.front_, camera_.up_);
+                glm::mat4 inv_view = glm::inverse(view);
+
+                prim_ray.origin = glm::vec3(inv_view * glm::vec4(prim_ray.origin, 1.0f));
+                prim_ray.direction = glm::vec3(inv_view * glm::vec4(prim_ray.direction, 0.0f));
+
+                p.color += trace_primary(prim_ray);
+            }
+        }
+           
+        p.color = Color{ p.color.r / samplesize, p.color.g / samplesize, p.color.b / samplesize };
+        p.color = Color{ p.color.r / (p.color.r + 1),p.color.g / (p.color.g + 1),p.color.b / (p.color.b + 1) };
+        write(p);
     }
-    ppm_.save(filename_);
 }
+
+
 
 Color Renderer::trace_primary(Ray const& prim_ray) const {
     Color pixel_color = Color{ 0.0f,0.0f,0.0f };
@@ -125,7 +152,8 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth, un
             if (hitp.mat->opacity_ < 1.0f)
                 pixel_color += trace_secondary(hitp, depth+1, 2) * (1.0f - hitp.mat->opacity_); 
         }
-    } else if (type == 2) {
+    } 
+    else if (type == 2) {
         // Snell's law
         glm::vec3 norm = hitpoint.normal;
         float eta_1 = 1.0f;
