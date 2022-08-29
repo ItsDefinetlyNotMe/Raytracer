@@ -26,19 +26,28 @@ void Renderer::render()
 {
     std::cout << "[........................................]";
     std::cout << "\r[";
-    int i=0;
-    auto first = std::thread(&Renderer::ray_thread,this,std::ref(i));
+
+    std::atomic<int> i{ 0 };
+    //int i = 0;
+    unsigned int threads = 10;
+    std::vector<std::thread> pool(threads);
+    for (int z = 0; z < threads; ++z) {
+        pool[z] = std::thread(&Renderer::ray_thread, this, std::ref(i));
+    }
+    for (auto& t : pool)
+        t.join();
+    /*auto first = std::thread(&Renderer::ray_thread, this, std::ref(i));
     auto second = std::thread(&Renderer::ray_thread, this,std::ref(i));
     auto third = std::thread(&Renderer::ray_thread, this, std::ref(i));
 
 
     first.join();
     second.join();
-    third.join();
+    third.join();*/
     ppm_.save(filename_);
 }
 
-void Renderer::ray_thread(int& i) {
+void Renderer::ray_thread(std::atomic<int>& i) {
     
     unsigned int root_of_samplesize = 1;
     unsigned int samplesize = pow(root_of_samplesize, 2);

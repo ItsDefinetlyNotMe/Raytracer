@@ -34,7 +34,7 @@ public:
     width = width_;
     height = height_;
   }
-  void ray_thread(int& i);
+  void ray_thread(std::atomic<int>& i);
 
 private:
     void write(Pixel const& p);
