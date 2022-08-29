@@ -2,15 +2,6 @@
 #include "glm/gtx/intersect.hpp"
 Triangle::Triangle(std::string const& n, std::shared_ptr<Material> const& mat, glm::vec3 lb, glm::vec3 rb, glm::vec3 t) : Shape(n, mat), left_bottom_{ lb }, right_bottom_{ rb }, top_{ t } {};
 
-float Triangle::volume() const {
-	return 0.0f;
-}
-
-float Triangle::area() const {
-	return (abs(right_bottom_.z - top_.z) * (left_bottom_.y - right_bottom_.y)) / 2;
-}
-
-
 std::ostream& Triangle::print(std::ostream& os) const {
 	return Shape::print(os) << "vertecie 0: (" << left_bottom_.x << "," << left_bottom_.y << "," << left_bottom_.z << ") " << "vertecie 1: (" << right_bottom_.x << "," << right_bottom_.y << "," << right_bottom_.z << ")" << "vertecie 2: (" << top_.x << "," << top_.y << "," << top_.z << ")";
 }
