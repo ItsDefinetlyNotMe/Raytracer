@@ -2,6 +2,8 @@
 #define HITPOINT_HPP
 
 #include <string>
+#include <math.h>
+
 #include <glm/vec3.hpp>
 #include "Material.hpp"
 struct Hitpoint {

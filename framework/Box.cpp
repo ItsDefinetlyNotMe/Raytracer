@@ -25,7 +25,7 @@ std::ostream& Box::print(std::ostream& os) const {
 //inside swapped with not_inside
 Hitpoint Box::intersect(Ray const& ray) const {
 	
-	// if (!Shape::intersect_bounding_box(ray)) return Hitpoint{};
+	if (!Shape::intersect_bounding_box(ray)) return Hitpoint{};
 
 	Ray obj_ray = {world_to_obj_position(ray.origin), glm::normalize(world_to_obj_direction(ray.direction))};
 	
@@ -156,7 +156,7 @@ glm::vec3 Box::normal(glm::vec3 const& point) const {
 	return glm::vec3{};
 }
 
-Bounding_Box Box::create_bounding_box() {
+void Box::create_bounding_box() {
 	// get all 8 transformed points and build bb from there
 	glm::vec3 points[8]; // c-style array should be fine
 	points[0] = obj_to_world_position(min_);
@@ -169,7 +169,8 @@ Bounding_Box Box::create_bounding_box() {
 	points[7] = obj_to_world_position(max_);
 
 	glm::vec3 min = points[0];
-	glm::vec3 max = points[1];
+	glm::vec3 max = points[7];
+	
 	for (int i = 0; i < 8; ++i) {
 		if (min.x > points[i].x) min.x = points[i].x;
 		if (min.y > points[i].y) min.y = points[i].y;
@@ -182,5 +183,12 @@ Bounding_Box Box::create_bounding_box() {
 	Bounding_Box bb {min, max};
 
 	Shape::set_bounding_box(bb);
-	return bb;
+}
+
+void Box::prepare_for_rendering(glm::mat4 const& parent_world_mat) {
+	// turn local model matrix into global model matrix
+	Shape::update_model_matrix(parent_world_mat);
+
+	// create bounding boxes in global world;
+	create_bounding_box();
 }

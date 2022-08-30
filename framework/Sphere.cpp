@@ -18,7 +18,7 @@ std::ostream& Sphere::print(std::ostream& os) const {
 }
 
 Hitpoint Sphere::intersect(Ray const& r) const {
-	// if (!Shape::intersect_bounding_box(r)) return Hitpoint{};
+	if (!Shape::intersect_bounding_box(r)) return Hitpoint{};
 
 	float t;
 
@@ -35,18 +35,27 @@ glm::vec3 Sphere::normal(glm::vec3 const& point) const {
 	return glm::normalize(point - Shape::obj_to_world_position(center_));
 }
 
-Bounding_Box Sphere::create_bounding_box() {
+void Sphere::create_bounding_box() {
 	Bounding_Box bb;
 
 	glm::vec3 w_center = obj_to_world_position(center_);
+	float scale = Shape::get_scale();
 
-	bb.min_ = glm::vec3(w_center.x - radius_ * Shape::get_scale(),
-						w_center.y - radius_ * Shape::get_scale(),
-						w_center.z - radius_ * Shape::get_scale());
-	bb.max_ = glm::vec3(w_center.x + radius_ * Shape::get_scale(),
-						w_center.y + radius_ * Shape::get_scale(),
-						w_center.z + radius_ * Shape::get_scale());
+	bb.min_ = glm::vec3(w_center.x - radius_ * scale,
+						w_center.y - radius_ * scale,
+						w_center.z - radius_ * scale);
+	bb.max_ = glm::vec3(w_center.x + radius_ * scale,
+						w_center.y + radius_ * scale,
+						w_center.z + radius_ * scale);
 	
 	Shape::set_bounding_box(bb);
-	return bb;
+}
+
+
+void Sphere::prepare_for_rendering(glm::mat4 const& parent_world_mat) {
+	// turn local model matrix into global model matrix
+	Shape::update_model_matrix(parent_world_mat);
+
+	// create bounding boxes in global world;
+	create_bounding_box();
 }

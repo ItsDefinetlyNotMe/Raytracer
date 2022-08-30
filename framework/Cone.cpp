@@ -16,6 +16,8 @@ std::ostream& Cone::print(std::ostream& os) const {
 }
 
 Hitpoint Cone::intersect(Ray const& ray) const {
+	if (!Shape::intersect_bounding_box(ray)) return Hitpoint{};
+
 	Ray obj_ray = { world_to_obj_position(ray.origin), glm::normalize(world_to_obj_direction(ray.direction)) };
 	
 	// cone is defined as x^2+y^2=z^2 , so we need a slope
@@ -82,7 +84,7 @@ glm::vec3 Cone::normal(glm::vec3 const& point) const {
 	return glm::normalize(obj_to_world_direction(norm));
 }
 
-Bounding_Box Cone::create_bounding_box() {
+void Cone::create_bounding_box() {
 	// get all 8 transformed points and build bb from there
 
 	glm::vec3 min = bottom_ - glm::vec3(radius_, 0.0f, radius_);
@@ -98,6 +100,9 @@ Bounding_Box Cone::create_bounding_box() {
 	points[6] = obj_to_world_position(glm::vec3(max.x, max.y, min.z));
 	points[7] = obj_to_world_position(max);
 
+	min = points[0];
+	max = points[7];
+
 	for (int i = 0; i < 8; ++i) {
 		if (min.x > points[i].x) min.x = points[i].x;
 		if (min.y > points[i].y) min.y = points[i].y;
@@ -110,5 +115,12 @@ Bounding_Box Cone::create_bounding_box() {
 	Bounding_Box bb {min, max};
 
 	Shape::set_bounding_box(bb);
-	return bb;
+}
+
+void Cone::prepare_for_rendering(glm::mat4 const& parent_world_mat) {
+	// turn local model matrix into global model matrix
+	Shape::update_model_matrix(parent_world_mat);
+
+	// create bounding boxes in global world;
+	create_bounding_box();
 }

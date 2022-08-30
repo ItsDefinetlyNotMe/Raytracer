@@ -22,6 +22,7 @@ private:
 	std::vector<Rotation> rotations_;
 	Scaling scale_;
 	glm::mat4 model_;
+	glm::mat4 inv_model_;
 	Bounding_Box bounding_box_;
 public:
 	Shape(std::string const& s);
@@ -46,7 +47,7 @@ public:
 
 	void set_bounding_box(Bounding_Box const& bounding_box);
 
-	void update_model_matrix();
+	void update_model_matrix(glm::mat4 const& parent_mat);
 
 	glm::vec3 obj_to_world_position(glm::vec3 const& position) const;
 	glm::vec3 obj_to_world_direction(glm::vec3 const& direction) const;
@@ -58,7 +59,8 @@ public:
 
 	virtual Hitpoint intersect(Ray const& ray) const = 0;
 	virtual glm::vec3 normal(glm::vec3 const& point) const = 0;
-	virtual Bounding_Box create_bounding_box() = 0;
+	virtual void create_bounding_box() = 0;
+	virtual void prepare_for_rendering(glm::mat4 const& parent_world_mat = glm::mat4(1.0f)) = 0;
 };
 std::ostream& operator<<(std::ostream& os, Shape const& s);
 #endif // ! SHAPE_HPP

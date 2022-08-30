@@ -57,7 +57,7 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
                 float m; // Specular Reflection Constant
 
                 float reflectivity = 0.0f;
-                float opacity = 0.0f;
+                float opacity = 1.0f;
                 float refractive_index = 1.0f;
 
                 iss >> name;
@@ -235,7 +235,7 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
         std::cout<<"No root node"<<std::endl;
         exit(-1);
     }
-    root->create_bounding_box();
+    root->prepare_for_rendering();
     Scene s {root, cameras, lights, ambient};
     rend = std::make_shared<Renderer>(Renderer{ x_res,y_res,filename,*find(cameras,cam_name),s});
     sdf_filestream.close();
