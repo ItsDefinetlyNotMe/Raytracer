@@ -48,13 +48,13 @@ void Renderer::render()
 
 void Renderer::ray_thread(std::atomic<int>& i) {
     
-    unsigned int root_of_samplesize = 3;
+    unsigned int root_of_samplesize = 1;
     unsigned int samplesize = pow(root_of_samplesize, 2);
 
     float d = sin((camera_.fov_x_ / 2.0f) * (M_PI / 180.0f));
     float distance = ((float)width_ / 2.0f) / d;
 
-    while (i < height_ * width_) {
+    while (i < (height_ - 1) * (width_ - 1)) {
         int j = i++;
         //for (unsigned int i = 0; i < height_ * width_; ++i) {// -1
         unsigned int x = j % width_;
@@ -115,12 +115,6 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth, un
 
     Color pixel_color{0.0f, 0.0f, 0.0f};
 
-    //ambient
-   /*if (type == 0)   sinf schatten auf durchsichtigen objekten zu sehen ?
-        pixel_color = Color{ scene_.ambient_ * hitpoint.mat->ka_ };*/ 
-
-    //float epsilon = 0.0005f;
-
     if (type == 0) {
         //ambient
         pixel_color = Color{ scene_.ambient_ * hitpoint.mat->ka_ };
@@ -130,20 +124,6 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth, un
 
             glm::vec3 offset_hitpoint = hitpoint.point3d + hitpoint.normal * epsilon;//infinit loop when ray is parallel to box ?
             Ray secondary_ray {offset_hitpoint, glm::normalize(light->position_ - offset_hitpoint)};
-            /*
-            Hitpoint hitp;
-            std::string obj_hit="";
-            do{
-                hitp = scene_.root_->intersect(secondary_ray);
-                if (!hitp.hit || hitp.t >= glm::length(light->position_ - offset_hitpoint))break;
-                if (obj_hit != hitp.name)
-                    obstructed -= hitp.mat->opacity_;
-                obj_hit = hitp.name;
-
-                offset_hitpoint = hitp.point3d + secondary_ray.direction * epsilon;
-                secondary_ray = { offset_hitpoint, secondary_ray.direction };
-            } while (hitp.hit);//bisschen weird
-            */
             float ob = cast_shadow(secondary_ray,light->position_);
       
             if (ob > 0) {
@@ -308,7 +288,7 @@ float Renderer::cast_shadow(Ray const& secondary_ray,glm::vec3 const& light_pos)
         obj_hit = hitp.name;
 
         s_r.origin = hitp.point3d + secondary_ray.direction * epsilon;
-        //s_r = { s_r., secondary_ray.direction };
+
     } while (hitp.hit);//bisschen weird
     return obstructed;
 }
