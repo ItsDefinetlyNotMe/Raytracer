@@ -56,6 +56,8 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
                 Color ks{};// Specular Color
                 float m; // Specular Reflection Constant
 
+                std::string type = "Diffuse";
+
                 float reflectivity = 0.0f;
                 float opacity = 1.0f;
                 float refractive_index = 1.0f;
@@ -65,11 +67,18 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
                 iss >> kd.r >> kd.g >> kd.b;
                 iss >> ks.r >> ks.g >> ks.b;
                 iss >> m;
-                iss >> reflectivity;
-                iss >> opacity;
-                iss >> refractive_index;
+                iss >> type;
 
-                materials.push_back(std::make_shared<Material>(Material{ name,ka,kd,ks,m, reflectivity, opacity, refractive_index }));
+                if ("Diffuse" == type) {
+                    materials.push_back(std::make_shared<Material>(Material{name, ka, kd, ks, m, Diffuse, 0.0f, 1.0f, 1.0f}));
+                } else if ("Metallic" == type) {
+                    iss >> reflectivity;
+                    materials.push_back(std::make_shared<Material>(Material{name, ka, kd, ks, m, Metallic, reflectivity, 1.0f, 1.0f}));
+                } else if ("Dielectric" == type) {
+                    iss >> opacity;
+                    iss >> refractive_index;
+                    materials.push_back(std::make_shared<Material>(Material{name, ka, kd, ks, m, Dielectric, 0.0f, opacity, refractive_index}));
+                } 
             }
             else if ("shape" == keyword) {
                 iss >> keyword;

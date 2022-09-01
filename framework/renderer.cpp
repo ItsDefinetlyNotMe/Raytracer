@@ -23,8 +23,8 @@ Renderer::Renderer(unsigned w, unsigned h, std::string const& file,Camera const&
 
 void Renderer::render()
 {
-    unsigned int root_of_samplesize = 2;
-    unsigned int samplesize = pow(root_of_samplesize, 2);
+    unsigned int sample_width = 1;
+    float samplesize = sample_width * sample_width;
     float d = sin((camera_.fov_x_ / 2.0f) * (M_PI / 180.0f));
     float distance = ((float)width_ / 2.0f) / d;
 
@@ -33,10 +33,10 @@ void Renderer::render()
             Pixel p(x, y);
             p.color;
 
-            for (unsigned int x_anti_aliasing = 0; x_anti_aliasing < root_of_samplesize; ++x_anti_aliasing) {
-                for (unsigned int y_anti_aliasing = 0; y_anti_aliasing < root_of_samplesize; ++y_anti_aliasing) {
-                    float screen_x = (float)x - ((float)width_ / 2.0f) + (1 + x_anti_aliasing * 2) / root_of_samplesize * (1.0f / 2.0f);
-                    float screen_y = (float)y - ((float)height_ / 2.0f) + (1 + y_anti_aliasing * 2) / root_of_samplesize * (1.0f / 2.0f);
+            for (unsigned int y_anti_aliasing = 1; y_anti_aliasing <= sample_width; ++y_anti_aliasing) {
+                for (unsigned int x_anti_aliasing = 1; x_anti_aliasing <= sample_width; ++x_anti_aliasing) {
+                    float screen_x = (float)x - ((float)width_ / 2.0f) + (float)x_anti_aliasing / (float)(1+sample_width);
+                    float screen_y = (float)y - ((float)height_ / 2.0f) + (float)y_anti_aliasing / (float)(1+sample_width);
 
                     Ray prim_ray{ glm::vec3(0, 0, 0), glm::normalize(glm::vec3{screen_x, screen_y, -distance}) };
 
@@ -65,15 +65,14 @@ Color Renderer::trace_primary(Ray const& prim_ray) const {
 
     //secondary ray
     if (hitp.hit && hitp.t > 0.0f) {
-        pixel_color += trace_secondary(hitp, 1, 0);
-        if (hitp.mat->reflectivity_ > 0.0f)
+        pixel_color += trace_secondary(hitp, 1, 0) * (hitp.mat->opacity_ - hitp.mat->reflectivity_);
+        if (hitp.mat->type_ == Metallic)
             pixel_color += trace_secondary(hitp, 1, 1) * hitp.mat->reflectivity_;
-        if (hitp.mat->opacity_ < 1.0f)
+        else if (hitp.mat->type_ == Dielectric)
             pixel_color += trace_secondary(hitp, 1, 2) * (1.0f - hitp.mat->opacity_); 
     }
 
     return pixel_color;
-    return Color{};
 }
 
 Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth, unsigned int type) const {
@@ -82,8 +81,7 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth, un
     Color pixel_color{0.0f, 0.0f, 0.0f};
 
     //ambient
-    if (type == 0)
-        pixel_color = Color{ scene_.ambient_ * hitpoint.mat->ka_ };
+    pixel_color = Color{ scene_.ambient_ * hitpoint.mat->ka_ };
 
     float epsilon = 0.0005f;
 
@@ -119,10 +117,10 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth, un
 
         Hitpoint hitp = scene_.root_->intersect(secondary_ray);
         if (hitp.hit && hitp.t > 0.0f) {
-            pixel_color += trace_secondary(hitp, depth, 0);
-            if (hitp.mat->reflectivity_ > 0.0f)
+            pixel_color += trace_secondary(hitp, depth, 0) * (hitp.mat->opacity_ - hitp.mat->reflectivity_);
+            if (hitp.mat->type_ == Metallic)
                 pixel_color += trace_secondary(hitp, depth+1, 1) * hitp.mat->reflectivity_;
-            if (hitp.mat->opacity_ < 1.0f)
+            else if (hitp.mat->type_ == Dielectric)
                 pixel_color += trace_secondary(hitp, depth+1, 2) * (1.0f - hitp.mat->opacity_); 
         }
     } else if (type == 2) {
@@ -176,11 +174,11 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth, un
 
             Hitpoint hitp = scene_.root_->intersect(secondary_ray);
             if (hitp.hit && hitp.t > 0.0f) {
-                trans_color += trace_secondary(hitp, depth, 0);
-                if (hitp.mat->reflectivity_ > 0.0f)
-                    trans_color += trace_secondary(hitp, depth+1, 1) * hitp.mat->reflectivity_;
-                if (hitp.mat->opacity_ < 1.0f)
-                    trans_color += trace_secondary(hitp, depth+1, 2) * (1.0f - hitp.mat->opacity_); 
+                trans_color += trace_secondary(hitp, depth, 0) * (hitp.mat->opacity_ - hitp.mat->reflectivity_);
+                if (hitp.mat->type_ == Metallic)
+                    pixel_color += trace_secondary(hitp, depth+1, 1) * hitp.mat->reflectivity_;
+                else if (hitp.mat->type_ == Dielectric)
+                    pixel_color += trace_secondary(hitp, depth+1, 2) * (1.0f - hitp.mat->opacity_); 
             }
             pixel_color += trans_color * trans;
         }
@@ -194,11 +192,11 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth, un
 
             Hitpoint hitp = scene_.root_->intersect(secondary_ray);
             if (hitp.hit && hitp.t > 0.0f) {
-                refl_color += trace_secondary(hitp, depth, 0);
-                if (hitp.mat->reflectivity_ > 0.0f)
-                    refl_color += trace_secondary(hitp, depth+1, 1) * hitp.mat->reflectivity_;
-                if (hitp.mat->opacity_ < 1.0f)
-                    refl_color += trace_secondary(hitp, depth+1, 2) * (1.0f - hitp.mat->opacity_); 
+                refl_color += trace_secondary(hitp, depth, 0) * (hitp.mat->opacity_ - hitp.mat->reflectivity_);
+                if (hitp.mat->type_ == Metallic)
+                    pixel_color += trace_secondary(hitp, depth+1, 1) * hitp.mat->reflectivity_;
+                else if (hitp.mat->type_ == Dielectric)
+                    pixel_color += trace_secondary(hitp, depth+1, 2) * (1.0f - hitp.mat->opacity_); 
             }
             pixel_color += refl_color * refl;
         }
