@@ -10,10 +10,10 @@ Hitpoint Triangle::intersect(Ray const& r) const {
 	if (!Shape::intersect_bounding_box(r)) return Hitpoint{};
 	
 	glm::vec3 uvt; // wtf ??
-	Ray obj_ray = { world_to_obj_position(r.origin),glm::normalize(world_to_obj_direction(r.direction)) };
+	Ray obj_ray = { world_to_obj_position(r.origin),world_to_obj_direction(r.direction) };
 	bool hit = glm::intersectRayTriangle(obj_ray.origin, obj_ray.direction, left_bottom_, right_bottom_, top_, uvt);
 	float world_t = uvt.z * Shape::get_scale();
-	glm::vec3 world_point_hit {r.origin + glm::normalize(r.direction) * world_t};
+	glm::vec3 world_point_hit {r.origin + r.direction * world_t};
 	glm::vec3 norm = normal(world_point_hit);
 	return Hitpoint{hit,world_t,Shape::get_name(),Shape::get_material(), world_point_hit, r.direction, norm};
 }

@@ -10,7 +10,7 @@ std::ostream& Cone::print(std::ostream& os) const {
 Hitpoint Cone::intersect(Ray const& ray) const {
 	if (!Shape::intersect_bounding_box(ray)) return Hitpoint{};
 
-	Ray obj_ray = { world_to_obj_position(ray.origin), glm::normalize(world_to_obj_direction(ray.direction)) };
+	Ray obj_ray = { world_to_obj_position(ray.origin), world_to_obj_direction(ray.direction) };
 	
 	// cone is defined as x^2+y^2=z^2 , so we need a slope
 	float slope = radius_ / height_;
@@ -48,8 +48,8 @@ Hitpoint Cone::intersect(Ray const& ray) const {
 	glm::vec3 point_hit = obj_ray.origin + obj_ray.direction * t;
 	if (point_hit.y <= 0.0f && point_hit.y >= -height_) {
 		float world_t = t * Shape::get_scale();
-		glm::vec3 world_point_hit{ ray.origin + glm::normalize(ray.direction) * world_t };
-		return Hitpoint{ true, world_t ,Shape::get_name(),Shape::get_material(), world_point_hit,glm::normalize(ray.direction), normal(world_point_hit)};
+		glm::vec3 world_point_hit{ ray.origin + ray.direction * world_t };
+		return Hitpoint{ true, world_t ,Shape::get_name(),Shape::get_material(), world_point_hit,ray.direction, normal(world_point_hit)};
 	} else {
 		float t3 = -obj_ray.origin.y / obj_ray.direction.y;
 		float t4 = (-height_ - obj_ray.origin.y) / obj_ray.direction.y;
@@ -58,22 +58,22 @@ Hitpoint Cone::intersect(Ray const& ray) const {
 		else return Hitpoint{};
 		
 		float world_t = t * Shape::get_scale();
-		glm::vec3 world_point_hit{ ray.origin + glm::normalize(ray.direction) * world_t };
-		return Hitpoint{ true, world_t ,Shape::get_name(),Shape::get_material(), world_point_hit,glm::normalize(ray.direction), normal(world_point_hit)};
+		glm::vec3 world_point_hit{ ray.origin + ray.direction * world_t };
+		return Hitpoint{ true, world_t ,Shape::get_name(),Shape::get_material(), world_point_hit,ray.direction, normal(world_point_hit)};
 	}
 }
 
 glm::vec3 Cone::normal(glm::vec3 const& point) const {
 	glm::vec3 obj_point = Shape::world_to_obj_position(point);
 	if (floating_equal<float>(obj_point.y, bottom_.y))
-		return glm::normalize(obj_to_world_direction({ 0.0f, -1.0f, 0.0f }));
+		return obj_to_world_direction({ 0.0f, -1.0f, 0.0f });
 	glm::vec3 norm{ obj_point - bottom_ };
 	norm.y = 0.0f;
 	norm = glm::normalize(norm);
 	norm.x = norm.x * (height_ / radius_);
 	norm.z = norm.z * (height_ / radius_);
 	norm.y = radius_ / height_;
-	return glm::normalize(obj_to_world_direction(norm));
+	return obj_to_world_direction(norm);
 }
 
 void Cone::create_bounding_box() {

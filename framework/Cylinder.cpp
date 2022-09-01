@@ -12,7 +12,7 @@ std::ostream& Cylinder::print(std::ostream& os) const {
 Hitpoint Cylinder::intersect(Ray const& ray) const {
 	if (!Shape::intersect_bounding_box(ray)) return Hitpoint{};
 
-	Ray obj_ray = { world_to_obj_position(ray.origin), glm::normalize(world_to_obj_direction(ray.direction)) };
+	Ray obj_ray = { world_to_obj_position(ray.origin), world_to_obj_direction(ray.direction) };
 	
 	// transform obj_ray, so that bottom would be at (0, 0, 0)
 	obj_ray.origin = obj_ray.origin - bottom_;
@@ -41,8 +41,8 @@ Hitpoint Cylinder::intersect(Ray const& ray) const {
 	glm::vec3 point_hit = obj_ray.origin + obj_ray.direction * t;
 	if (point_hit.y <= height_ && point_hit.y >= 0.0f) {
 		float world_t = t * Shape::get_scale();
-		glm::vec3 world_point_hit{ ray.origin + glm::normalize(ray.direction) * world_t };
-		return Hitpoint{ true, world_t ,Shape::get_name(),Shape::get_material(), world_point_hit,glm::normalize(ray.direction), normal(world_point_hit)};
+		glm::vec3 world_point_hit{ ray.origin + ray.direction * world_t };
+		return Hitpoint{ true, world_t ,Shape::get_name(),Shape::get_material(), world_point_hit,ray.direction, normal(world_point_hit)};
 	} else {
 		// origin.y + direction.y * t = height/0
 		float t3 = -obj_ray.origin.y / obj_ray.direction.y;
@@ -52,8 +52,8 @@ Hitpoint Cylinder::intersect(Ray const& ray) const {
 		else return Hitpoint{};
 		
 		float world_t = t * Shape::get_scale();
-		glm::vec3 world_point_hit{ ray.origin + glm::normalize(ray.direction) * world_t };
-		return Hitpoint{ true, world_t ,Shape::get_name(),Shape::get_material(), world_point_hit,glm::normalize(ray.direction), normal(world_point_hit)};
+		glm::vec3 world_point_hit{ ray.origin + ray.direction * world_t };
+		return Hitpoint{ true, world_t ,Shape::get_name(),Shape::get_material(), world_point_hit,ray.direction, normal(world_point_hit)};
 	}
 	return Hitpoint{};
 }
@@ -62,14 +62,14 @@ glm::vec3 Cylinder::normal(glm::vec3 const& point) const {
 	glm::vec3 obj_point = Shape::world_to_obj_position(point);
 	//oben/unten
 	if (floating_equal<float>(obj_point.y, bottom_.y)) {
-		return glm::normalize(Shape::obj_to_world_direction(glm::vec3{0.0f, -1.0f, 0.0f}));
+		return Shape::obj_to_world_direction(glm::vec3{0.0f, -1.0f, 0.0f});
 	}
 	else if(floating_equal<float>(obj_point.y, bottom_.y + height_)) {
-		return glm::normalize(Shape::obj_to_world_direction(glm::vec3{ 0.0f, 1.0f, 0.0f }));
+		return Shape::obj_to_world_direction(glm::vec3{ 0.0f, 1.0f, 0.0f });
 	}
 	//seite
 	glm::vec3 normal = glm::vec3{obj_point.x, 0.0f, obj_point.z} - glm::vec3{bottom_.x, 0.0f, bottom_.z};
-	return glm::normalize(Shape::obj_to_world_direction(normal));
+	return Shape::obj_to_world_direction(normal);
 }
 
 void Cylinder::create_bounding_box() {

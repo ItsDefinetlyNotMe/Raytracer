@@ -19,7 +19,7 @@ Hitpoint Box::intersect(Ray const& ray) const {
 	
 	if (!Shape::intersect_bounding_box(ray)) return Hitpoint{};
 
-	Ray obj_ray = {world_to_obj_position(ray.origin), glm::normalize(world_to_obj_direction(ray.direction))};
+	Ray obj_ray = {world_to_obj_position(ray.origin), world_to_obj_direction(ray.direction)};
 	
 	//vlt eleganter ?
 	bool not_inside = true;//true = r�ckseite sehen
@@ -128,22 +128,22 @@ glm::vec3 Box::normal(glm::vec3 const& point) const {
 	glm::vec3 obj_point = Shape::world_to_obj_position(point);
 
 	if (floating_equal<float>(obj_point.x, min_.x))
-		return glm::normalize(Shape::obj_to_world_direction(glm::vec3 {-1,  0,  0}));
+		return Shape::obj_to_world_direction(glm::vec3 {-1,  0,  0});
 
 	else if (floating_equal<float>(obj_point.x,max_.x))
-		return glm::normalize(Shape::obj_to_world_direction(glm::vec3 { 1,  0,  0}));
+		return Shape::obj_to_world_direction(glm::vec3 { 1,  0,  0});
 
 	else if (floating_equal<float>(obj_point.y,min_.y))
-		return glm::normalize(Shape::obj_to_world_direction(glm::vec3 { 0, -1,  0}));
+		return Shape::obj_to_world_direction(glm::vec3 { 0, -1,  0});
 
 	else if (floating_equal<float>(obj_point.y,max_.y))
-		return glm::normalize(Shape::obj_to_world_direction(glm::vec3 { 0,  1,  0}));
+		return Shape::obj_to_world_direction(glm::vec3 { 0,  1,  0});
 
 	else if (floating_equal<float>(obj_point.z,min_.z))
-		return glm::normalize(Shape::obj_to_world_direction(glm::vec3 { 0,  0, -1}));
+		return Shape::obj_to_world_direction(glm::vec3 { 0,  0, -1});
 
 	else if (floating_equal<float>(obj_point.z,max_.z))
-		return glm::normalize(Shape::obj_to_world_direction(glm::vec3 { 0,  0,  1}));
+		return Shape::obj_to_world_direction(glm::vec3 { 0,  0,  1});
 
 	return glm::vec3{};
 }

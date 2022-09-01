@@ -14,7 +14,7 @@ Hitpoint Sphere::intersect(Ray const& r) const {
 
 	float t;
 
-	Ray obj_ray = {world_to_obj_position(r.origin), glm::normalize(world_to_obj_direction(r.direction))};
+	Ray obj_ray = {world_to_obj_position(r.origin), world_to_obj_direction(r.direction)};
 
 	bool hit = glm::intersectRaySphere(obj_ray.origin, obj_ray.direction, center_, radius_ * radius_, t);
 
