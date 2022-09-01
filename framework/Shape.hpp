@@ -29,9 +29,6 @@ public:
 	Shape(std::string const& s, std::shared_ptr<Material> const& m);
 	Shape();
 
-
-	virtual float area() const = 0;
-	virtual float volume() const = 0;
 	virtual std::ostream& print(std::ostream& os) const;
 	// Color get_color() const;
 

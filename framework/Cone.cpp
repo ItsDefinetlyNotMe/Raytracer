@@ -3,14 +3,6 @@
 
 Cone::Cone(std::string const& n, std::shared_ptr<Material> const& mat, glm::vec3 b, float r, float h) : Shape(n, mat), bottom_(b), radius_(r), height_(h) {}
 
-float Cone::area() const {
-	return 0;
-}
-
-float Cone::volume() const {
-	return 0;
-}
-
 std::ostream& Cone::print(std::ostream& os) const {
 	return Shape::print(os) << "position: " << "(" << bottom_.x << ", " << bottom_.y << ", " << bottom_.z << ")" << " radius: " << radius_ << ", height: " << height_;
 }

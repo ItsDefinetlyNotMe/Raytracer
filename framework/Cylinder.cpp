@@ -5,14 +5,6 @@
 
 Cylinder::Cylinder(std::string const& n, std::shared_ptr<Material> const& mat, glm::vec3 b, float r, float h) : Shape(n, mat), bottom_(b), radius_(r), height_(h) {}
 
-float Cylinder::area() const {
-	return 2 * M_PI * radius_ * height_;
-}
-
-float Cylinder::volume() const {
-	return 2 * M_PI * radius_ * height_;
-}
-
 std::ostream& Cylinder::print(std::ostream& os) const {
 	return Shape::print(os) << "position: " << "(" << bottom_.x << ", " << bottom_.y << ", " << bottom_.z << ")" << " radius: " << radius_ << ", height: " << height_;
 }
