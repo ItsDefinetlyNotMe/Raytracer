@@ -9,6 +9,9 @@
 #include <utility>
 #include <cmath>
 
+// timing set up
+#include <chrono>
+
 //now single threaded again
 /*
 int main(int argc, char* argv[])
@@ -39,7 +42,16 @@ int main(int argc, char* argv[]) {
     
     std::string const filename = argv[1];
     auto s = sdf_reader(filename);
+
+    // timing
+    auto start = std::chrono::high_resolution_clock::now();
     s->render();
+    auto stop = std::chrono::high_resolution_clock::now();
+
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+
+    std::cout<<"Rendering took: "<<duration.count()<<"ms !"<<std::endl;
+    // ===============
 
     unsigned int image_width;
     unsigned int image_height;
