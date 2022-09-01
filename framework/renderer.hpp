@@ -35,6 +35,8 @@ public:
     height = height_;
   }
   void ray_thread(std::atomic<int>& i);
+  float Renderer::cast_shadow(Ray const& secondary_ray, glm::vec3 const& light_pos) const;
+
 
 private:
     void write(Pixel const& p);
