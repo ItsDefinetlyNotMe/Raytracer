@@ -2,13 +2,13 @@
 #define HITPOINT_HPP
 
 #include <string>
-#include <math.h>
+#include <limits>
 
 #include <glm/vec3.hpp>
 #include "Material.hpp"
 struct Hitpoint {
 	bool hit{ false };
-	float t = INFINITY; 
+	float t = std::numeric_limits<float>::max(); 
 	std::string name{ "" };
 	std::shared_ptr<Material> mat{};
 	glm::vec3 point3d{ 0.0f,0.0f,0.0f };

@@ -6,13 +6,6 @@
 #include <glm/vec3.hpp>
 
 #include "SDFreader.hpp"
-#include "Composite.hpp"
-#include "Box.hpp"
-#include "Sphere.hpp"
-#include "Cone.hpp"
-#include "Cylinder.hpp"
-#include "Triangle.hpp"
-
 
 //mag ich nicht!!
 std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {

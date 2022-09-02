@@ -41,6 +41,7 @@ int main(int argc, char* argv[]) {
     }
     
     std::string const filename = argv[1];
+    std::cout << "reading sdf...\n";
     auto s = sdf_reader(filename);
     std::cout << "rendering scene...\n";
 

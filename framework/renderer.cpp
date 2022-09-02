@@ -9,11 +9,6 @@
 #define GLM_FORCE_RADIANS
 #define _USE_MATH_DEFINES
 #include "renderer.hpp"
-#include "helper.hpp"
-#include "Area_light.hpp"
-#include <glm/gtx/rotate_vector.hpp>
-#include <thread>
-#include <ctime>
 //added Camera to the mix
 //wenn es per const& �bergebn werden brauchen wir keinen pointer oder ?
 const float epsilon = 0.0005f;
@@ -31,18 +26,19 @@ void Renderer::render()
     std::cout << "[........................................]";
     std::cout << "\r[";
 
-    std::time_t start = std::time(nullptr);
-
     std::atomic<int> i{ 0 };
     //int i = 0;
-    unsigned int threads = 4;
+    unsigned int threads = std::thread::hardware_concurrency();
+    // unsigned int threads = 1;
+    // if hardware_concurrency can't get a value it returns 0
+    // using 4 as a fall back in that case
+    if (threads == 0) threads = 4;
     std::vector<std::thread> pool(threads);
     for (int z = 0; z < threads; ++z) {
         pool[z] = std::thread(&Renderer::ray_thread, this, std::ref(i));
     }
     for (auto& t : pool)
         t.join();
-    std::cout << "\nRendering took " << (std::time(nullptr) - start)/60 << "m, " << (std::time(nullptr) - start) % 60 <<"s with " <<  threads << " threads." << std::endl;
     ppm_.save(filename_);
 }
 
@@ -100,11 +96,12 @@ Color Renderer::trace_primary(Ray const& prim_ray) const {
 
     //secondary ray
     if (hitp.hit && hitp.t > 0.0f) {
-        pixel_color += trace_secondary(hitp, 1, 0) * (hitp.mat->opacity_ - hitp.mat->reflectivity_);
+        if (hitp.mat->opacity_ > 0.0f)
+            pixel_color += trace_secondary(hitp, 1, 0) * (hitp.mat->opacity_ - hitp.mat->reflectivity_);
         if (hitp.mat->type_ == Metallic)
-            pixel_color += trace_secondary(hitp, 1, 1) * hitp.mat->reflectivity_;
+            pixel_color += trace_secondary(hitp, 1, 1) * hitp.mat->reflectivity_ * hitp.mat->kd_;
         else if (hitp.mat->type_ == Dielectric)
-            pixel_color += trace_secondary(hitp, 1, 2) * (1.0f - hitp.mat->opacity_); 
+            pixel_color += trace_secondary(hitp, 1, 2) * (1.0f - hitp.mat->opacity_) * hitp.mat->kd_; 
     }
 
     return pixel_color;
@@ -170,11 +167,12 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth, un
 
         Hitpoint hitp = scene_.root_->intersect(secondary_ray);//kann man das mit dem oben zusammen tun ?
         if (hitp.hit && hitp.t > 0.0f) {
+            if (hitp.mat->opacity_ > 0.0f)
             pixel_color += trace_secondary(hitp, depth, 0) * (hitp.mat->opacity_ - hitp.mat->reflectivity_);
             if (hitp.mat->type_ == Metallic)
-                pixel_color += trace_secondary(hitp, depth+1, 1) * hitp.mat->reflectivity_;
+                pixel_color += trace_secondary(hitp, depth+1, 1) * hitp.mat->reflectivity_ * hitp.mat->kd_;
             else if (hitp.mat->type_ == Dielectric)
-                pixel_color += trace_secondary(hitp, depth+1, 2) * (1.0f - hitp.mat->opacity_); 
+                pixel_color += trace_secondary(hitp, depth+1, 2) * (1.0f - hitp.mat->opacity_) * hitp.mat->kd_; 
         }
     } 
     else if (type == 2) {
@@ -182,7 +180,7 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth, un
         glm::vec3 norm = hitpoint.normal;
         float eta_1 = 1.0f;
         float eta_2 = hitpoint.mat->refractive_index_;
-        float cos_i = glm::dot(norm, hitpoint.direction);
+        float cos_i = glm::dot(hitpoint.direction, norm);
         if (cos_i < 0.0f) {
             // we are outside
             // we want our cos to be positive
@@ -215,9 +213,6 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth, un
             refl = (Fren_O + Fren_P) / 2.0f;
             trans = 1.0f - refl;
         }
-        
-        Hitpoint transmitted;
-        Hitpoint refracted;
 
         if (trans > 0.0f) {
             glm::vec3 offset_hitpoint = hitpoint.point3d - norm * epsilon;
@@ -228,11 +223,12 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth, un
 
             Hitpoint hitp = scene_.root_->intersect(secondary_ray);
             if (hitp.hit && hitp.t > 0.0f) {
+                if (hitp.mat->opacity_ > 0.0f)
                 trans_color += trace_secondary(hitp, depth, 0) * (hitp.mat->opacity_ - hitp.mat->reflectivity_);
                 if (hitp.mat->type_ == Metallic)
-                    pixel_color += trace_secondary(hitp, depth+1, 1) * hitp.mat->reflectivity_;
+                    pixel_color += trace_secondary(hitp, depth+1, 1) * hitp.mat->reflectivity_ * hitp.mat->kd_;
                 else if (hitp.mat->type_ == Dielectric)
-                    pixel_color += trace_secondary(hitp, depth+1, 2) * (1.0f - hitp.mat->opacity_); 
+                    pixel_color += trace_secondary(hitp, depth+1, 2) * (1.0f - hitp.mat->opacity_) * hitp.mat->kd_; 
             }
             pixel_color += trans_color * trans;
         }
@@ -246,11 +242,12 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth, un
 
             Hitpoint hitp = scene_.root_->intersect(secondary_ray);
             if (hitp.hit && hitp.t > 0.0f) {
+                if (hitp.mat->opacity_ > 0.0f)
                 refl_color += trace_secondary(hitp, depth, 0) * (hitp.mat->opacity_ - hitp.mat->reflectivity_);
                 if (hitp.mat->type_ == Metallic)
-                    pixel_color += trace_secondary(hitp, depth+1, 1) * hitp.mat->reflectivity_;
+                    pixel_color += trace_secondary(hitp, depth+1, 1) * hitp.mat->reflectivity_ * hitp.mat->kd_;
                 else if (hitp.mat->type_ == Dielectric)
-                    pixel_color += trace_secondary(hitp, depth+1, 2) * (1.0f - hitp.mat->opacity_); 
+                    pixel_color += trace_secondary(hitp, depth+1, 2) * (1.0f - hitp.mat->opacity_) * hitp.mat->kd_; 
             }
             pixel_color += refl_color * refl;
         }

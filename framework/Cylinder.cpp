@@ -1,7 +1,5 @@
 #define _USE_MATH_DEFINES
 #include "Cylinder.hpp"
-#include "helper.hpp"
-#include <glm/gtx/intersect.hpp>
 
 Cylinder::Cylinder(std::string const& n, std::shared_ptr<Material> const& mat, glm::vec3 b, float r, float h) : Shape(n, mat), bottom_(b), radius_(r), height_(h) {}
 

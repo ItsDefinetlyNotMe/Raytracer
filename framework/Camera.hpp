@@ -1,12 +1,10 @@
 #ifndef CAMERA
 #define CAMERA
-#include "Ray.hpp"
-#include "pixel.hpp"
+
 #include <glm/vec3.hpp>
+#include <vector>
 #include <string>
 
-#include <vector>
-#include "Shape.hpp"
 struct Camera {
 	std::string name_;
 	float fov_x_;

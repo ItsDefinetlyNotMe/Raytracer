@@ -1,8 +1,10 @@
 #ifndef BOX_HPP
 #define BOX_HPP
 
+#include <glm/glm.hpp>
+
 #include "Shape.hpp"
-#include "color.hpp"
+#include "helper.hpp"
 class Box :public Shape {
 private:
 	glm::vec3 min_;

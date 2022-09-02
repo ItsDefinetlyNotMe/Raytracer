@@ -1,7 +1,12 @@
 #ifndef CYLINDER_HPP
 #define CYLINDER_HPP
 
+#include <glm/gtx/intersect.hpp>
+
 #include "Shape.hpp"
+
+#include "helper.hpp"
+
 class Cylinder : public Shape {
 private:
 	float radius_;

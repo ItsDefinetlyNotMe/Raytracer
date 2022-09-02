@@ -2,6 +2,9 @@
 #define CONE_HPP
 
 #include "Shape.hpp"
+
+#include "helper.hpp"
+
 class Cone : public Shape {
 private:
 	float radius_;

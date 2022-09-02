@@ -2,6 +2,7 @@
 #define COMPOSITE_HPP
 
 #include <vector>
+
 #include "Shape.hpp"
 
 class Composite : public Shape {

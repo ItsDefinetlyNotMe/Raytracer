@@ -1,6 +1,5 @@
 #include "Box.hpp"
-#include "helper.hpp"
-#include <glm/glm.hpp>
+
 Box::Box(glm::vec3 const& mi, glm::vec3 const& ma) :min_{ mi }, max_{ ma }{
 	if (min_.x > max_.x) std::swap(min_.x, max_.x);
 	if (min_.y > max_.y) std::swap(min_.y, max_.y);

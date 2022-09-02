@@ -1,5 +1,4 @@
 #include "Cone.hpp"
-#include "helper.hpp"
 
 Cone::Cone(std::string const& n, std::shared_ptr<Material> const& mat, glm::vec3 b, float r, float h) : Shape(n, mat), bottom_(b), radius_(r), height_(h) {}
 
