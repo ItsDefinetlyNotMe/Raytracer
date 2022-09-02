@@ -9,13 +9,6 @@ Box::Box(glm::vec3 const& mi, glm::vec3 const& ma) :min_{ mi }, max_{ ma }{
 
 Box::Box(std::string const& n, std::shared_ptr<Material> const& mat, glm::vec3 const& mi, glm::vec3 const& ma) : Shape{ n,mat }, min_{ mi }, max_{ ma } {}
 
-float Box::area() const {
-	return abs((min_.x - max_.x) * (min_.y - max_.y) * 2) + abs((min_.y - max_.y) * (min_.z - max_.z) * 2) + abs((min_.z - max_.z) * (min_.x - max_.x) * 2);
-}
-
-float Box::volume() const {
-	return abs((min_.x - max_.x) * (min_.y - max_.y) * (min_.z - max_.z));
-}
 
 std::ostream& Box::print(std::ostream& os) const {
 
@@ -90,42 +83,6 @@ Hitpoint Box::intersect(Ray const& ray) const {
 			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction, normal(world_temp) };
 		}
 	}
-	/*
-	float t = (min_.x - ray.origin.x) / ray.direction.x;
-	glm::vec3 temp{ ray.origin + ray.direction * t };
-	if ((temp.z > min_.z && temp.z < max_.z) && (temp.y > min_.y && temp.y < max_.y) && t >= 0) {
-		return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
-	}
-	
-	t = (max_.x - ray.origin.x) / ray.direction.x;
-	temp =  ray.origin + ray.direction * t ;
-	if ((temp.z > min_.z && temp.z < max_.z) && (temp.y > min_.y && temp.y < max_.y) && t >= 0) {
-		return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
-	}
-
-	t = (min_.y - ray.origin.y) / ray.direction.y;
-	temp = ray.origin + ray.direction * t ;
-	if ((temp.z > min_.z && temp.z < max_.z) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-		return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
-	}
-
-	t = (max_.y - ray.origin.y) / ray.direction.y;
-	temp = ray.origin + ray.direction * t ;
-	if ((temp.z > min_.z && temp.z < max_.z) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-		return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
-	}
-
-	t = (min_.z - ray.origin.z) / ray.direction.z;
-	temp = ray.origin + ray.direction * t;
-	if ((temp.y > min_.y && temp.y < max_.y) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-		return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
-	}
-
-	t = (max_.z - ray.origin.z) / ray.direction.z;
-	temp =  ray.origin + ray.direction * t;
-	if ((temp.y > min_.y && temp.y < max_.y) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-		return  Hitpoint{ true,t,Shape::get_name(),Shape::get_material(),temp,ray.direction };
-	}*/
 	return Hitpoint{};
 }
 

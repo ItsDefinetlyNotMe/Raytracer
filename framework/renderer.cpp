@@ -9,9 +9,14 @@
 #define GLM_FORCE_RADIANS
 #define _USE_MATH_DEFINES
 #include "renderer.hpp"
+#include "helper.hpp"
+#include "Area_light.hpp"
 #include <glm/gtx/rotate_vector.hpp>
+#include <thread>
+#include <ctime>
 //added Camera to the mix
 //wenn es per const& �bergebn werden brauchen wir keinen pointer oder ?
+const float epsilon = 0.0005f;
 Renderer::Renderer(unsigned w, unsigned h, std::string const& file,Camera const& cam,Scene const& sce)
     : width_(w)
     , height_(h)
@@ -23,40 +28,70 @@ Renderer::Renderer(unsigned w, unsigned h, std::string const& file,Camera const&
 
 void Renderer::render()
 {
-    unsigned int root_of_samplesize = 2;
+    std::cout << "[........................................]";
+    std::cout << "\r[";
+
+    std::time_t start = std::time(nullptr);
+
+    std::atomic<int> i{ 0 };
+    //int i = 0;
+    unsigned int threads = 4;
+    std::vector<std::thread> pool(threads);
+    for (int z = 0; z < threads; ++z) {
+        pool[z] = std::thread(&Renderer::ray_thread, this, std::ref(i));
+    }
+    for (auto& t : pool)
+        t.join();
+    std::cout << "\nRendering took " << (std::time(nullptr) - start)/60 << "m, " << (std::time(nullptr) - start) % 60 <<"s with " <<  threads << " threads." << std::endl;
+    ppm_.save(filename_);
+}
+
+void Renderer::ray_thread(std::atomic<int>& i) {
+    
+    unsigned int root_of_samplesize = 1;
     unsigned int samplesize = pow(root_of_samplesize, 2);
+
     float d = sin((camera_.fov_x_ / 2.0f) * (M_PI / 180.0f));
     float distance = ((float)width_ / 2.0f) / d;
 
-    for (unsigned int y = 0; y < height_; ++y) {
-        for (unsigned int x = 0; x < width_; ++x) {
-            Pixel p(x, y);
-            p.color;
-
-            for (unsigned int x_anti_aliasing = 0; x_anti_aliasing < root_of_samplesize; ++x_anti_aliasing) {
-                for (unsigned int y_anti_aliasing = 0; y_anti_aliasing < root_of_samplesize; ++y_anti_aliasing) {
-                    float screen_x = (float)x - ((float)width_ / 2.0f) + (1 + x_anti_aliasing * 2) / root_of_samplesize * (1.0f / 2.0f);
-                    float screen_y = (float)y - ((float)height_ / 2.0f) + (1 + y_anti_aliasing * 2) / root_of_samplesize * (1.0f / 2.0f);
-
-                    Ray prim_ray{ glm::vec3(0, 0, 0), glm::normalize(glm::vec3{screen_x, screen_y, -distance}) };
-
-                    glm::mat4 view = glm::lookAt(camera_.position_, camera_.position_ + camera_.front_, camera_.up_);
-                    glm::mat4 inv_view = glm::inverse(view);
-
-                    prim_ray.origin = glm::vec3(inv_view * glm::vec4(prim_ray.origin, 1.0f));
-                    prim_ray.direction = glm::vec3(inv_view * glm::vec4(prim_ray.direction, 0.0f));
-
-                    p.color += trace_primary(prim_ray);
-                }
-            }
-
-            p.color = Color{ p.color.r / samplesize, p.color.g / samplesize, p.color.b / samplesize };
-            p.color = Color{ p.color.r / (p.color.r + 1),p.color.g / (p.color.g + 1),p.color.b / (p.color.b + 1) };
-            write(p);
+    while (i < (height_ - 1) * (width_ - 1)) {
+        int j = i++;
+        //for (unsigned int i = 0; i < height_ * width_; ++i) {// -1
+        unsigned int x = j % width_;
+        unsigned int y = j / width_;
+        if (j % (int)(width_*height_/40) == 0)
+        {
+            std::cout << "|";
+            std::cout.flush();
         }
+        Pixel p(x, y);
+        //std::cout << "x: " << x << "y: " << y << std::endl;
+      
+        for (unsigned int x_anti_aliasing = 0; x_anti_aliasing < root_of_samplesize; ++x_anti_aliasing) {
+            for (unsigned int y_anti_aliasing = 0; y_anti_aliasing < root_of_samplesize; ++y_anti_aliasing) {
+
+                float screen_x = (float)x - ((float)width_ / 2.0f) + (1 + x_anti_aliasing * 2) / root_of_samplesize * (1.0f / 2.0f);
+                float screen_y = (float)y - ((float)height_ / 2.0f) + (1 + y_anti_aliasing * 2) / root_of_samplesize * (1.0f / 2.0f);
+
+                Ray prim_ray{ glm::vec3{0.0f, 0.0f, 0.0f}, glm::normalize(glm::vec3{screen_x, screen_y, -distance}) };
+
+                glm::mat4 view = glm::lookAt(camera_.position_, camera_.position_ + camera_.front_, camera_.up_);
+                glm::mat4 inv_view = glm::inverse(view);
+
+                prim_ray.origin = glm::vec3( inv_view * glm::vec4(prim_ray.origin, 1.0f) );
+                prim_ray.direction = glm::vec3(inv_view * glm::vec4(prim_ray.direction, 0.0f));
+
+                p.color += trace_primary(prim_ray);
+            }
+        }
+           
+        p.color = Color{ p.color.r / samplesize, p.color.g / samplesize, p.color.b / samplesize };
+        p.color = Color{ p.color.r / (p.color.r + 1),p.color.g / (p.color.g + 1),p.color.b / (p.color.b + 1) };
+        write(p);
     }
-    ppm_.save(filename_);
 }
+
+
 
 Color Renderer::trace_primary(Ray const& prim_ray) const {
     Color pixel_color = Color{ 0.0f,0.0f,0.0f };
@@ -75,49 +110,66 @@ Color Renderer::trace_primary(Ray const& prim_ray) const {
     return pixel_color;
     return Color{};
 }
-
 Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth, unsigned int type) const {
     if (depth > 4) return Color{0.0f, 0.0f, 0.0f};
 
     Color pixel_color{0.0f, 0.0f, 0.0f};
 
-    //ambient
-    if (type == 0)
+    if (type == 0) {
+        //ambient
         pixel_color = Color{ scene_.ambient_ * hitpoint.mat->ka_ };
 
-    float epsilon = 0.0005f;
+        for (auto const& light : scene_.lights_) {
+            float obstructed = 1;//anderer name
 
-    if (type == 0) {
-        for (auto const& light : scene_.lights_){
-            bool obstructed = false;
-
-            glm::vec3 offset_hitpoint = hitpoint.point3d + hitpoint.normal * epsilon;
+            glm::vec3 offset_hitpoint = hitpoint.point3d + hitpoint.normal * epsilon;//infinit loop when ray is parallel to box ?
             Ray secondary_ray {offset_hitpoint, glm::normalize(light->position_ - offset_hitpoint)};
-
-            Hitpoint hitp = scene_.root_->intersect(secondary_ray);
-            if (hitp.hit && hitp.t < glm::length(light->position_ - offset_hitpoint)) {
-                obstructed = true;
-            }
-
-            if (!obstructed) {
+            float ob = cast_shadow(secondary_ray,light->position_);
+      
+            if (ob > 0) {
                 //diffuse
                 glm::vec3 normal_object_hit_n{ hitpoint.normal };
                 float cos_omega = glm::dot(normal_object_hit_n, secondary_ray.direction);
-                pixel_color += light->color_ * light->brightness_ * hitpoint.mat->kd_ * std::max(cos_omega,0.0f);
+                pixel_color += light->color_ * light->brightness_ * hitpoint.mat->kd_ * std::max(cos_omega,0.0f) * ob;
                 
                 //specular 
                 glm::vec3 reflected_i_n{ (-secondary_ray.direction) - (2 * glm::dot(-secondary_ray.direction,normal_object_hit_n) * normal_object_hit_n) };
                 glm::vec3 vec_to_cam_n = -hitpoint.direction;
-                pixel_color += std::pow(std::max(glm::dot(reflected_i_n, vec_to_cam_n), 0.0f), hitpoint.mat->m_) * hitpoint.mat->ks_ * light->brightness_ * light->color_;
+                pixel_color += std::pow(std::max(glm::dot(reflected_i_n, vec_to_cam_n), 0.0f), hitpoint.mat->m_) * hitpoint.mat->ks_ * light->brightness_ * light->color_ * ob;
             }
         }
-    }
+        for (auto const& light : scene_.a_lights_) {
+            Color  px{0,0,0};
+            for (int x = 0; x < light->v_steps_; ++x) {
+                for (int y = 0; y < light->u_steps_; ++y) {
+                    glm::vec3 point{ light->sample(x,y) };
+                    glm::vec3 offset_hitpoint = hitpoint.point3d + hitpoint.normal * epsilon;//infinit loop when ray is parallel to box ?
+                    Ray secondary_ray{ offset_hitpoint, glm::normalize(point - offset_hitpoint) };
 
+                    float ob = cast_shadow(secondary_ray,point);
+
+                    if (ob > 0) {
+                        //diffuse
+                        glm::vec3 normal_object_hit_n{ hitpoint.normal };
+                        float cos_omega = glm::dot(normal_object_hit_n, secondary_ray.direction);
+                        px += light->color_ * light->brightness_ * hitpoint.mat->kd_ * std::max(cos_omega, 0.0f) * ob;
+
+                        //specular 
+                        glm::vec3 reflected_i_n{ (-secondary_ray.direction) - (2 * glm::dot(-secondary_ray.direction,normal_object_hit_n) * normal_object_hit_n) };
+                        glm::vec3 vec_to_cam_n = -hitpoint.direction;
+                        px += std::pow(std::max(glm::dot(reflected_i_n, vec_to_cam_n), 0.0f), hitpoint.mat->m_) * hitpoint.mat->ks_ * light->brightness_ * light->color_ * ob;
+                    }
+                }
+            }
+            pixel_color += {px.r / (light->u_steps_ * light->v_steps_), px.g / (light->u_steps_ * light->v_steps_), px.b / (light->u_steps_ * light->v_steps_)};
+        }
+    }
+    //reflect
     if (type == 1) {
         glm::vec3 offset_hitpoint = hitpoint.point3d + hitpoint.normal * epsilon;
         Ray secondary_ray {offset_hitpoint, hitpoint.direction - 2.0f * glm::dot(hitpoint.direction, hitpoint.normal) * hitpoint.normal};
 
-        Hitpoint hitp = scene_.root_->intersect(secondary_ray);
+        Hitpoint hitp = scene_.root_->intersect(secondary_ray);//kann man das mit dem oben zusammen tun ?
         if (hitp.hit && hitp.t > 0.0f) {
             pixel_color += trace_secondary(hitp, depth, 0);
             if (hitp.mat->reflectivity_ > 0.0f)
@@ -125,7 +177,8 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth, un
             if (hitp.mat->opacity_ < 1.0f)
                 pixel_color += trace_secondary(hitp, depth+1, 2) * (1.0f - hitp.mat->opacity_); 
         }
-    } else if (type == 2) {
+    } 
+    else if (type == 2) {
         // Snell's law
         glm::vec3 norm = hitpoint.normal;
         float eta_1 = 1.0f;
@@ -220,4 +273,22 @@ void Renderer::write(Pixel const& p){
     }
 
     ppm_.write(p);
+}
+
+float Renderer::cast_shadow(Ray const& secondary_ray,glm::vec3 const& light_pos) const {
+    Ray s_r{ secondary_ray };
+    float obstructed = 1.0f;
+    Hitpoint hitp;
+    std::string obj_hit = "";
+    do {
+        hitp = scene_.root_->intersect(s_r);
+        if (!hitp.hit || hitp.t >= glm::length(light_pos - s_r.origin) || floating_equal( obstructed ,0.0f))break;
+        if (obj_hit != hitp.name)
+            obstructed -= hitp.mat->opacity_;
+        obj_hit = hitp.name;
+
+        s_r.origin = hitp.point3d + secondary_ray.direction * epsilon;
+
+    } while (hitp.hit);//bisschen weird
+    return obstructed;
 }

@@ -32,13 +32,14 @@ int main(int argc, char* argv[])
   return 0;
 }*/
 int main(int argc, char* argv[]) {
-    if (argc < 2) {
+    /*if (argc < 2) {
       std::cout<<"Usage: raytracer.exe [filename]"<<std::endl;
       return -1;
-    }
-    
-    std::string const filename = argv[1];
+    }*/
+    std::cout << "reading SDF...\n";
+    std::string const filename = "./examplescene.sdf";//argv[1];
     auto s = sdf_reader(filename);
+    std::cout << "rendering scene...\n";
     s->render();
 
     unsigned int image_width;

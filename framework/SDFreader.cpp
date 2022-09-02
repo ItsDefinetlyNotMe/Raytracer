@@ -19,6 +19,7 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
     //kommentar
     std::vector<std::shared_ptr<Material>> materials;
     std::vector<std::shared_ptr<Point_Light>> lights;
+    std::vector<std::shared_ptr<Area_Light>> area_lights;
     std::vector<std::shared_ptr<Camera>> cameras;
     std::vector<std::shared_ptr<Shape>> shapes;
     Color ambient{0.2f,0.2f,0.2f};
@@ -184,6 +185,21 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
                 lights.push_back(std::make_shared<Point_Light>(Point_Light{light_name,pos,color,brightness}));
 
             }
+            else if ("a_light" == keyword) {
+                glm::vec3 pos{};
+                glm::vec3 v_vec{};
+                glm::vec3 u_vec{};
+                unsigned v_steps = 0;
+                unsigned u_steps = 0;
+
+                iss >> pos.x >> pos.y >> pos.z;
+                iss >> v_steps;
+                iss >> u_steps;
+                iss >> v_vec.x >> v_vec.y >> v_vec.z;
+                iss >> u_vec.x >> u_vec.y >> u_vec.z;
+
+                area_lights.push_back(std::make_shared<Area_Light>(Area_Light{ pos,v_vec,u_vec,v_steps,u_steps}));
+            }
             else if ("camera" == keyword) {
                 //camera <name> <fov-x> (<eye> <dir> <up>)
                 std::string camera_name;
@@ -236,7 +252,7 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
         exit(-1);
     }
     root->create_bounding_box();
-    Scene s {root, cameras, lights, ambient};
+    Scene s{ root, cameras, lights, area_lights, ambient };
     rend = std::make_shared<Renderer>(Renderer{ x_res,y_res,filename,*find(cameras,cam_name),s});
     sdf_filestream.close();
     return rend;
