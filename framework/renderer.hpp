@@ -44,7 +44,7 @@ private:
     void write(Pixel const& p);
     Color trace_primary(Ray const& prim_ray) const;
     // 0 diffuse | 1 reflection | 2 refraction
-    Color trace_secondary(Hitpoint const& h, unsigned int depth, unsigned int type /*hier eher enum*/) const;
+    Color trace_secondary(Hitpoint const& h, unsigned int depth) const;
     float cast_shadow(Ray const& secondary_ray, glm::vec3 const& light_pos) const;
 
     unsigned int width_;

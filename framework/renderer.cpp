@@ -44,7 +44,7 @@ void Renderer::render()
 
 void Renderer::ray_thread(std::atomic<int>& i) {
     
-    unsigned int root_of_samplesize = 1;
+    unsigned int root_of_samplesize = 2;
     unsigned int samplesize = pow(root_of_samplesize, 2);
 
     float d = sin((camera_.fov_x_ / 2.0f) * (M_PI / 180.0f));
@@ -95,87 +95,82 @@ Color Renderer::trace_primary(Ray const& prim_ray) const {
     Hitpoint hitp = scene_.root_->intersect(prim_ray);
 
     //secondary ray
-    if (hitp.hit && hitp.t > 0.0f) {
-        if (hitp.mat->opacity_ > 0.0f)
-            pixel_color += trace_secondary(hitp, 1, 0) * (hitp.mat->opacity_ - hitp.mat->reflectivity_);
-        if (hitp.mat->type_ == Metallic)
-            pixel_color += trace_secondary(hitp, 1, 1) * hitp.mat->reflectivity_ * hitp.mat->kd_;
-        else if (hitp.mat->type_ == Dielectric)
-            pixel_color += trace_secondary(hitp, 1, 2) * (1.0f - hitp.mat->opacity_) * hitp.mat->kd_; 
-    }
+    if (hitp.hit && hitp.t > 0.0f)
+        pixel_color += trace_secondary(hitp, 0);
 
     return pixel_color;
 }
-Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth, unsigned int type) const {
+Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth) const {
     if (depth > 4) return Color{0.0f, 0.0f, 0.0f};
 
     Color pixel_color{0.0f, 0.0f, 0.0f};
 
-    if (type == 0) {
-        //ambient
-        pixel_color = Color{ scene_.ambient_ * hitpoint.mat->ka_ };
+    // diffuse light for all
+    // ===========================================================
+    //ambient
+    pixel_color = Color{ scene_.ambient_ * hitpoint.mat->ka_ };
 
-        for (auto const& light : scene_.lights_) {
-            float obstructed = 1;//anderer name
+    for (auto const& light : scene_.lights_) {
+        float obstructed = 1;//anderer name
 
-            glm::vec3 offset_hitpoint = hitpoint.point3d + hitpoint.normal * epsilon;//infinit loop when ray is parallel to box ?
-            Ray secondary_ray {offset_hitpoint, glm::normalize(light->position_ - offset_hitpoint)};
-            float ob = cast_shadow(secondary_ray,light->position_);
-      
-            if (ob > 0) {
-                //diffuse
-                glm::vec3 normal_object_hit_n{ hitpoint.normal };
-                float cos_omega = glm::dot(normal_object_hit_n, secondary_ray.direction);
-                pixel_color += light->color_ * light->brightness_ * hitpoint.mat->kd_ * std::max(cos_omega,0.0f) * ob;
-                
-                //specular 
-                glm::vec3 reflected_i_n{ (-secondary_ray.direction) - (2 * glm::dot(-secondary_ray.direction,normal_object_hit_n) * normal_object_hit_n) };
-                glm::vec3 vec_to_cam_n = -hitpoint.direction;
-                pixel_color += std::pow(std::max(glm::dot(reflected_i_n, vec_to_cam_n), 0.0f), hitpoint.mat->m_) * hitpoint.mat->ks_ * light->brightness_ * light->color_ * ob;
-            }
-        }
-        for (auto const& light : scene_.a_lights_) {
-            Color  px{0,0,0};
-            for (int x = 0; x < light->v_steps_; ++x) {
-                for (int y = 0; y < light->u_steps_; ++y) {
-                    glm::vec3 point{ light->sample(x,y) };
-                    glm::vec3 offset_hitpoint = hitpoint.point3d + hitpoint.normal * epsilon;//infinit loop when ray is parallel to box ?
-                    Ray secondary_ray{ offset_hitpoint, glm::normalize(point - offset_hitpoint) };
-
-                    float ob = cast_shadow(secondary_ray,point);
-
-                    if (ob > 0) {
-                        //diffuse
-                        glm::vec3 normal_object_hit_n{ hitpoint.normal };
-                        float cos_omega = glm::dot(normal_object_hit_n, secondary_ray.direction);
-                        px += light->color_ * light->brightness_ * hitpoint.mat->kd_ * std::max(cos_omega, 0.0f) * ob;
-
-                        //specular 
-                        glm::vec3 reflected_i_n{ (-secondary_ray.direction) - (2 * glm::dot(-secondary_ray.direction,normal_object_hit_n) * normal_object_hit_n) };
-                        glm::vec3 vec_to_cam_n = -hitpoint.direction;
-                        px += std::pow(std::max(glm::dot(reflected_i_n, vec_to_cam_n), 0.0f), hitpoint.mat->m_) * hitpoint.mat->ks_ * light->brightness_ * light->color_ * ob;
-                    }
-                }
-            }
-            pixel_color += {px.r / (light->u_steps_ * light->v_steps_), px.g / (light->u_steps_ * light->v_steps_), px.b / (light->u_steps_ * light->v_steps_)};
+        glm::vec3 offset_hitpoint = hitpoint.point3d + hitpoint.normal * epsilon;//infinit loop when ray is parallel to box ?
+        Ray secondary_ray {offset_hitpoint, glm::normalize(light->position_ - offset_hitpoint)};
+        float ob = cast_shadow(secondary_ray,light->position_);
+    
+        if (ob > 0) {
+            //diffuse
+            glm::vec3 normal_object_hit_n{ hitpoint.normal };
+            float cos_omega = glm::dot(normal_object_hit_n, secondary_ray.direction);
+            pixel_color += light->color_ * light->brightness_ * hitpoint.mat->kd_ * std::max(cos_omega,0.0f) * ob;
+            
+            //specular 
+            glm::vec3 reflected_i_n{ (-secondary_ray.direction) - (2 * glm::dot(-secondary_ray.direction,normal_object_hit_n) * normal_object_hit_n) };
+            glm::vec3 vec_to_cam_n = -hitpoint.direction;
+            pixel_color += std::pow(std::max(glm::dot(reflected_i_n, vec_to_cam_n), 0.0f), hitpoint.mat->m_) * hitpoint.mat->ks_ * light->brightness_ * light->color_ * ob;
         }
     }
+    for (auto const& light : scene_.a_lights_) {
+        Color  px{0,0,0};
+        for (int x = 0; x < light->v_steps_; ++x) {
+            for (int y = 0; y < light->u_steps_; ++y) {
+                glm::vec3 point{ light->sample(x,y) };
+                glm::vec3 offset_hitpoint = hitpoint.point3d + hitpoint.normal * epsilon;//infinit loop when ray is parallel to box ?
+                Ray secondary_ray{ offset_hitpoint, glm::normalize(point - offset_hitpoint) };
+
+                float ob = cast_shadow(secondary_ray,point);
+
+                if (ob > 0) {
+                    //diffuse
+                    glm::vec3 normal_object_hit_n{ hitpoint.normal };
+                    float cos_omega = glm::dot(normal_object_hit_n, secondary_ray.direction);
+                    px += light->color_ * light->brightness_ * hitpoint.mat->kd_ * std::max(cos_omega, 0.0f) * ob;
+
+                    //specular 
+                    glm::vec3 reflected_i_n{ (-secondary_ray.direction) - (2 * glm::dot(-secondary_ray.direction,normal_object_hit_n) * normal_object_hit_n) };
+                    glm::vec3 vec_to_cam_n = -hitpoint.direction;
+                    px += std::pow(std::max(glm::dot(reflected_i_n, vec_to_cam_n), 0.0f), hitpoint.mat->m_) * hitpoint.mat->ks_ * light->brightness_ * light->color_ * ob;
+                }
+            }
+        }
+        pixel_color += {px.r / (light->u_steps_ * light->v_steps_), px.g / (light->u_steps_ * light->v_steps_), px.b / (light->u_steps_ * light->v_steps_)};
+    }
+    pixel_color = pixel_color * hitpoint.mat->opacity_;
+    // ===========================================================
+
     //reflect
-    if (type == 1) {
+    // ===========================================================
+    if (hitpoint.mat->type_ == Metallic) {
         glm::vec3 offset_hitpoint = hitpoint.point3d + hitpoint.normal * epsilon;
         Ray secondary_ray {offset_hitpoint, hitpoint.direction - 2.0f * glm::dot(hitpoint.direction, hitpoint.normal) * hitpoint.normal};
 
-        Hitpoint hitp = scene_.root_->intersect(secondary_ray);//kann man das mit dem oben zusammen tun ?
-        if (hitp.hit && hitp.t > 0.0f) {
-            if (hitp.mat->opacity_ > 0.0f)
-            pixel_color += trace_secondary(hitp, depth, 0) * (hitp.mat->opacity_ - hitp.mat->reflectivity_);
-            if (hitp.mat->type_ == Metallic)
-                pixel_color += trace_secondary(hitp, depth+1, 1) * hitp.mat->reflectivity_ * hitp.mat->kd_;
-            else if (hitp.mat->type_ == Dielectric)
-                pixel_color += trace_secondary(hitp, depth+1, 2) * (1.0f - hitp.mat->opacity_) * hitp.mat->kd_; 
-        }
+        Hitpoint hitp = scene_.root_->intersect(secondary_ray);
+        if (hitp.hit && hitp.t > 0.0f)
+            pixel_color += trace_secondary(hitp, depth+1) * hitpoint.mat->reflectivity_ * hitpoint.mat->kd_;
     } 
-    else if (type == 2) {
+    // ===========================================================
+    // refract
+    // ===========================================================
+    else if (hitpoint.mat->type_ == Dielectric) {
         // Snell's law
         glm::vec3 norm = hitpoint.normal;
         float eta_1 = 1.0f;
@@ -222,14 +217,8 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth, un
             Color trans_color {0.0f, 0.0f, 0.0f};
 
             Hitpoint hitp = scene_.root_->intersect(secondary_ray);
-            if (hitp.hit && hitp.t > 0.0f) {
-                if (hitp.mat->opacity_ > 0.0f)
-                trans_color += trace_secondary(hitp, depth, 0) * (hitp.mat->opacity_ - hitp.mat->reflectivity_);
-                if (hitp.mat->type_ == Metallic)
-                    pixel_color += trace_secondary(hitp, depth+1, 1) * hitp.mat->reflectivity_ * hitp.mat->kd_;
-                else if (hitp.mat->type_ == Dielectric)
-                    pixel_color += trace_secondary(hitp, depth+1, 2) * (1.0f - hitp.mat->opacity_) * hitp.mat->kd_; 
-            }
+            if (hitp.hit && hitp.t > 0.0f)
+                trans_color += trace_secondary(hitp, depth+1) * (1.0f - hitpoint.mat->opacity_) * hitpoint.mat->kd_; 
             pixel_color += trans_color * trans;
         }
 
@@ -241,17 +230,12 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth, un
             Color refl_color {0.0f, 0.0f, 0.0f};
 
             Hitpoint hitp = scene_.root_->intersect(secondary_ray);
-            if (hitp.hit && hitp.t > 0.0f) {
-                if (hitp.mat->opacity_ > 0.0f)
-                refl_color += trace_secondary(hitp, depth, 0) * (hitp.mat->opacity_ - hitp.mat->reflectivity_);
-                if (hitp.mat->type_ == Metallic)
-                    pixel_color += trace_secondary(hitp, depth+1, 1) * hitp.mat->reflectivity_ * hitp.mat->kd_;
-                else if (hitp.mat->type_ == Dielectric)
-                    pixel_color += trace_secondary(hitp, depth+1, 2) * (1.0f - hitp.mat->opacity_) * hitp.mat->kd_; 
-            }
+            if (hitp.hit && hitp.t > 0.0f)
+                refl_color += trace_secondary(hitp, depth+1) * (1.0f - hitpoint.mat->opacity_) * hitpoint.mat->kd_; 
             pixel_color += refl_color * refl;
         }
     }
+    // ===========================================================
     return pixel_color;
 }
 
