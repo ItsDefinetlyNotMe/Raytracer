@@ -44,8 +44,8 @@ void Renderer::render()
 
 void Renderer::ray_thread(std::atomic<int>& i) {
     
-    unsigned int root_of_samplesize = 2;
-    unsigned int samplesize = pow(root_of_samplesize, 2);
+    unsigned int sample_width = 2;
+    unsigned int samplesize = sample_width * sample_width;
 
     float d = sin((camera_.fov_x_ / 2.0f) * (M_PI / 180.0f));
     float distance = ((float)width_ / 2.0f) / d;
@@ -63,11 +63,11 @@ void Renderer::ray_thread(std::atomic<int>& i) {
         Pixel p(x, y);
         //std::cout << "x: " << x << "y: " << y << std::endl;
       
-        for (unsigned int x_anti_aliasing = 0; x_anti_aliasing < root_of_samplesize; ++x_anti_aliasing) {
-            for (unsigned int y_anti_aliasing = 0; y_anti_aliasing < root_of_samplesize; ++y_anti_aliasing) {
+        for (unsigned int y_anti_aliasing = 1; y_anti_aliasing <= sample_width; ++y_anti_aliasing) {
+            for (unsigned int x_anti_aliasing = 1; x_anti_aliasing <= sample_width; ++x_anti_aliasing) {
 
-                float screen_x = (float)x - ((float)width_ / 2.0f) + (1 + x_anti_aliasing * 2) / root_of_samplesize * (1.0f / 2.0f);
-                float screen_y = (float)y - ((float)height_ / 2.0f) + (1 + y_anti_aliasing * 2) / root_of_samplesize * (1.0f / 2.0f);
+                float screen_x = (float)x - ((float)width_  / 2.0f) + ((float) x_anti_aliasing / (float) (1 + sample_width));
+                float screen_y = (float)y - ((float)height_ / 2.0f) + ((float) y_anti_aliasing / (float) (1 + sample_width));
 
                 Ray prim_ray{ glm::vec3{0.0f, 0.0f, 0.0f}, glm::normalize(glm::vec3{screen_x, screen_y, -distance}) };
 
@@ -154,7 +154,7 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth) co
         }
         pixel_color += {px.r / (light->u_steps_ * light->v_steps_), px.g / (light->u_steps_ * light->v_steps_), px.b / (light->u_steps_ * light->v_steps_)};
     }
-    pixel_color = pixel_color * hitpoint.mat->opacity_;
+    pixel_color = pixel_color * (hitpoint.mat->opacity_ - hitpoint.mat->reflectivity_);
     // ===========================================================
 
     //reflect
