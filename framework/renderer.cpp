@@ -118,10 +118,13 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth) co
         float ob = cast_shadow(secondary_ray,light->position_);
     
         if (ob > 0) {
+            // light falloff via inverse square law
+            float dist = glm::distance(offset_hitpoint, light->position_);
+            float light_intensity = light->brightness_ / (dist * dist);
             //diffuse
             glm::vec3 normal_object_hit_n{ hitpoint.normal };
             float cos_omega = glm::dot(normal_object_hit_n, secondary_ray.direction);
-            pixel_color += light->color_ * light->brightness_ * hitpoint.mat->kd_ * std::max(cos_omega,0.0f) * ob;
+            pixel_color += light->color_ * light_intensity * hitpoint.mat->kd_ * std::max(cos_omega,0.0f) * ob;
             
             //specular 
             glm::vec3 reflected_i_n{ (-secondary_ray.direction) - (2 * glm::dot(-secondary_ray.direction,normal_object_hit_n) * normal_object_hit_n) };
