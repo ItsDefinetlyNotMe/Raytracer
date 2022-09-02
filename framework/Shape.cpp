@@ -27,24 +27,24 @@ Bounding_Box Shape::get_bounding_box() const {
 
 void Shape::set_translation(Translation const& translation) {
 	translation_ = translation;
-	update_model_matrix();
+	update_model_matrix(glm::mat4(1.0f));
 }
 
 void Shape::set_rotation(Rotation const& rot) {
 	rotations_.push_back(rot);
-	update_model_matrix();
+	update_model_matrix(glm::mat4(1.0f));
 }
 
 void Shape::set_scaling(Scaling const& scale) {
 	scale_ = scale;
-	update_model_matrix();
+	update_model_matrix(glm::mat4(1.0f));
 }
 
 void Shape::set_bounding_box(Bounding_Box const& bounding_box) {
 	bounding_box_ = bounding_box;
 }
 
-void Shape::update_model_matrix() {
+void Shape::update_model_matrix(glm::mat4 const& parent_mat) {
 	glm::mat4 translation_mat = glm::translate(glm::mat4(), translation_.translate);
 	
 	glm::mat4 rotation_mat = glm::mat4(1.0f);
@@ -60,7 +60,8 @@ void Shape::update_model_matrix() {
 	// uniform scaling for now
 	glm::mat4 scale_mat = glm::scale(glm::vec3(scale_.scale));
 
-	model_ = translation_mat * rotation_mat * scale_mat;
+	model_ = parent_mat * translation_mat * rotation_mat * scale_mat;
+	inv_model_ = glm::inverse(model_);
 }
 
 glm::vec3 Shape::obj_to_world_position(glm::vec3 const& position) const{
@@ -72,11 +73,11 @@ glm::vec3 Shape::obj_to_world_direction(glm::vec3 const& direction) const{
 }
 
 glm::vec3 Shape::world_to_obj_position(glm::vec3 const& position) const{
-	return glm::vec3(glm::inverse(model_) * glm::vec4(position, 1.0f));
+	return glm::vec3(inv_model_ * glm::vec4(position, 1.0f));
 }
 
 glm::vec3 Shape::world_to_obj_direction(glm::vec3 const& direction) const{
-	return glm::normalize(glm::vec3(glm::inverse(model_) * glm::vec4(direction, 0.0f)));
+	return glm::normalize(glm::vec3(inv_model_ * glm::vec4(direction, 0.0f)));
 }
 
 bool Shape::intersect_bounding_box(Ray const& ray) const{

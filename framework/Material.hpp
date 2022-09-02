@@ -9,6 +9,8 @@
 
 #include "Color.hpp"
 
+enum Mat_Type {Diffuse, Metallic, Dielectric};
+
 struct Material {
     std::string name_;
     
@@ -17,6 +19,8 @@ struct Material {
     Color ks_; // Specular Color
     
     float m_; // Specular Reflection Constant
+
+    Mat_Type type_ = Diffuse;
 
     float reflectivity_ = 0.0f;
 

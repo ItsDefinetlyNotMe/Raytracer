@@ -7,11 +7,13 @@ std::ostream& Triangle::print(std::ostream& os) const {
 }
 
 Hitpoint Triangle::intersect(Ray const& r) const {
+	if (!Shape::intersect_bounding_box(r)) return Hitpoint{};
+	
 	glm::vec3 uvt; // wtf ??
-	Ray obj_ray = { world_to_obj_position(r.origin),glm::normalize(world_to_obj_direction(r.direction)) };
+	Ray obj_ray = { world_to_obj_position(r.origin),world_to_obj_direction(r.direction) };
 	bool hit = glm::intersectRayTriangle(obj_ray.origin, obj_ray.direction, left_bottom_, right_bottom_, top_, uvt);
 	float world_t = uvt.z * Shape::get_scale();
-	glm::vec3 world_point_hit {r.origin + glm::normalize(r.direction) * world_t};
+	glm::vec3 world_point_hit {r.origin + r.direction * world_t};
 	glm::vec3 norm = normal(world_point_hit);
 	return Hitpoint{hit,world_t,Shape::get_name(),Shape::get_material(), world_point_hit, r.direction, norm};
 }
@@ -23,7 +25,7 @@ glm::vec3 Triangle::normal(glm::vec3 const& point) const {
 	return glm::normalize(glm::cross(b - a, c - a));
 }
 
-Bounding_Box Triangle::create_bounding_box() {
+void Triangle::create_bounding_box() {
 	// get all 8 transformed points and build bb from there
 
 	glm::vec3 p1 = obj_to_world_position(left_bottom_);
@@ -52,5 +54,12 @@ Bounding_Box Triangle::create_bounding_box() {
 	Bounding_Box bb {min, max};
 
 	Shape::set_bounding_box(bb);
-	return bb;
+}
+
+void Triangle::prepare_for_rendering(glm::mat4 const& parent_world_mat) {
+	// turn local model matrix into global model matrix
+	Shape::update_model_matrix(parent_world_mat);
+
+	// create bounding boxes in global world;
+	create_bounding_box();
 }

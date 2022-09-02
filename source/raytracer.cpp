@@ -9,6 +9,9 @@
 #include <utility>
 #include <cmath>
 
+// timing set up
+#include <chrono>
+
 //now single threaded again
 /*
 int main(int argc, char* argv[])
@@ -32,15 +35,24 @@ int main(int argc, char* argv[])
   return 0;
 }*/
 int main(int argc, char* argv[]) {
-    /*if (argc < 2) {
+    if (argc < 2) {
       std::cout<<"Usage: raytracer.exe [filename]"<<std::endl;
       return -1;
-    }*/
-    std::cout << "reading SDF...\n";
-    std::string const filename = "./examplescene.sdf";//argv[1];
+    }
+    
+    std::string const filename = argv[1];
     auto s = sdf_reader(filename);
     std::cout << "rendering scene...\n";
+
+    // timing
+    auto start = std::chrono::high_resolution_clock::now();
     s->render();
+    auto stop = std::chrono::high_resolution_clock::now();
+
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+
+    std::cout<<"Rendering took: "<<duration.count()<<"ms !"<<std::endl;
+    // ===============
 
     unsigned int image_width;
     unsigned int image_height;

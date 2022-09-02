@@ -10,12 +10,11 @@ private:
 public:
 	Composite(std::string const& n, std::vector<std::shared_ptr<Shape>> const& children);
 
-	inline float area() const {return 0;};
-	inline float volume() const {return 0;};
 	// std::ostream& print(std::ostream& os) const override;
 	Hitpoint intersect(Ray const& ray) const override;
 	inline glm::vec3 normal(glm::vec3 const& point) const override {return glm::vec3(0);};
-    Bounding_Box create_bounding_box() override;
+    void create_bounding_box() override;
+	void prepare_for_rendering(glm::mat4 const& parent_world_mat) override;
 };
 
 #endif // COMPOSITE_HPP

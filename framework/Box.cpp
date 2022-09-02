@@ -9,7 +9,6 @@ Box::Box(glm::vec3 const& mi, glm::vec3 const& ma) :min_{ mi }, max_{ ma }{
 
 Box::Box(std::string const& n, std::shared_ptr<Material> const& mat, glm::vec3 const& mi, glm::vec3 const& ma) : Shape{ n,mat }, min_{ mi }, max_{ ma } {}
 
-
 std::ostream& Box::print(std::ostream& os) const {
 
 	return Shape::print(os) << "min: (" << min_.x << "," << min_.y << "," << min_.z << ") " << "max: (" << max_.x << "," << max_.y << "," << max_.z << ")";
@@ -18,9 +17,9 @@ std::ostream& Box::print(std::ostream& os) const {
 //inside swapped with not_inside
 Hitpoint Box::intersect(Ray const& ray) const {
 	
-	// if (!Shape::intersect_bounding_box(ray)) return Hitpoint{};
+	if (!Shape::intersect_bounding_box(ray)) return Hitpoint{};
 
-	Ray obj_ray = {world_to_obj_position(ray.origin), glm::normalize(world_to_obj_direction(ray.direction))};
+	Ray obj_ray = {world_to_obj_position(ray.origin), world_to_obj_direction(ray.direction)};
 	
 	//vlt eleganter ?
 	bool not_inside = true;//true = r�ckseite sehen
@@ -93,27 +92,27 @@ glm::vec3 Box::normal(glm::vec3 const& point) const {
 	glm::vec3 obj_point = Shape::world_to_obj_position(point);
 
 	if (floating_equal<float>(obj_point.x, min_.x))
-		return glm::normalize(Shape::obj_to_world_direction(glm::vec3 {-1,  0,  0}));
+		return Shape::obj_to_world_direction(glm::vec3 {-1,  0,  0});
 
 	else if (floating_equal<float>(obj_point.x,max_.x))
-		return glm::normalize(Shape::obj_to_world_direction(glm::vec3 { 1,  0,  0}));
+		return Shape::obj_to_world_direction(glm::vec3 { 1,  0,  0});
 
 	else if (floating_equal<float>(obj_point.y,min_.y))
-		return glm::normalize(Shape::obj_to_world_direction(glm::vec3 { 0, -1,  0}));
+		return Shape::obj_to_world_direction(glm::vec3 { 0, -1,  0});
 
 	else if (floating_equal<float>(obj_point.y,max_.y))
-		return glm::normalize(Shape::obj_to_world_direction(glm::vec3 { 0,  1,  0}));
+		return Shape::obj_to_world_direction(glm::vec3 { 0,  1,  0});
 
 	else if (floating_equal<float>(obj_point.z,min_.z))
-		return glm::normalize(Shape::obj_to_world_direction(glm::vec3 { 0,  0, -1}));
+		return Shape::obj_to_world_direction(glm::vec3 { 0,  0, -1});
 
 	else if (floating_equal<float>(obj_point.z,max_.z))
-		return glm::normalize(Shape::obj_to_world_direction(glm::vec3 { 0,  0,  1}));
+		return Shape::obj_to_world_direction(glm::vec3 { 0,  0,  1});
 
 	return glm::vec3{};
 }
 
-Bounding_Box Box::create_bounding_box() {
+void Box::create_bounding_box() {
 	// get all 8 transformed points and build bb from there
 	glm::vec3 points[8]; // c-style array should be fine
 	points[0] = obj_to_world_position(min_);
@@ -126,7 +125,8 @@ Bounding_Box Box::create_bounding_box() {
 	points[7] = obj_to_world_position(max_);
 
 	glm::vec3 min = points[0];
-	glm::vec3 max = points[1];
+	glm::vec3 max = points[7];
+	
 	for (int i = 0; i < 8; ++i) {
 		if (min.x > points[i].x) min.x = points[i].x;
 		if (min.y > points[i].y) min.y = points[i].y;
@@ -139,5 +139,12 @@ Bounding_Box Box::create_bounding_box() {
 	Bounding_Box bb {min, max};
 
 	Shape::set_bounding_box(bb);
-	return bb;
+}
+
+void Box::prepare_for_rendering(glm::mat4 const& parent_world_mat) {
+	// turn local model matrix into global model matrix
+	Shape::update_model_matrix(parent_world_mat);
+
+	// create bounding boxes in global world;
+	create_bounding_box();
 }
