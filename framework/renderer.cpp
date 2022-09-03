@@ -12,12 +12,13 @@
 //added Camera to the mix
 //wenn es per const& �bergebn werden brauchen wir keinen pointer oder ?
 const float epsilon = 0.0005f;
-Renderer::Renderer(unsigned w, unsigned h, std::string const& file,Camera const& cam,Scene const& sce)
+Renderer::Renderer(unsigned w, unsigned h, std::string const& file,Camera const& cam, unsigned sample_width, Scene const& sce)
     : width_(w)
     , height_(h)
     , color_buffer_(w*h, Color{0.0, 0.0, 0.0})
     , filename_(file)
     , camera_(cam)
+    , sample_width_(sample_width)
     , scene_(sce)
     , ppm_(width_, height_) {}
 
@@ -40,12 +41,12 @@ void Renderer::render()
     for (auto& t : pool)
         t.join();
     ppm_.save(filename_);
+    std::cout<<"] Done!\n";
 }
 
 void Renderer::ray_thread(std::atomic<int>& i) {
     
-    unsigned int sample_width = 2;
-    unsigned int samplesize = sample_width * sample_width;
+    unsigned int samplesize = sample_width_ * sample_width_;
 
     float d = sin((camera_.fov_x_ / 2.0f) * (M_PI / 180.0f));
     float distance = ((float)width_ / 2.0f) / d;
@@ -63,11 +64,11 @@ void Renderer::ray_thread(std::atomic<int>& i) {
         Pixel p(x, y);
         //std::cout << "x: " << x << "y: " << y << std::endl;
       
-        for (unsigned int y_anti_aliasing = 1; y_anti_aliasing <= sample_width; ++y_anti_aliasing) {
-            for (unsigned int x_anti_aliasing = 1; x_anti_aliasing <= sample_width; ++x_anti_aliasing) {
+        for (unsigned int y_anti_aliasing = 1; y_anti_aliasing <= sample_width_; ++y_anti_aliasing) {
+            for (unsigned int x_anti_aliasing = 1; x_anti_aliasing <= sample_width_; ++x_anti_aliasing) {
 
-                float screen_x = (float)x - ((float)width_  / 2.0f) + ((float) x_anti_aliasing / (float) (1 + sample_width));
-                float screen_y = (float)y - ((float)height_ / 2.0f) + ((float) y_anti_aliasing / (float) (1 + sample_width));
+                float screen_x = (float)x - ((float)width_  / 2.0f) + ((float) x_anti_aliasing / (float) (1 + sample_width_));
+                float screen_y = (float)y - ((float)height_ / 2.0f) + ((float) y_anti_aliasing / (float) (1 + sample_width_));
 
                 Ray prim_ray{ glm::vec3{0.0f, 0.0f, 0.0f}, glm::normalize(glm::vec3{screen_x, screen_y, -distance}) };
 

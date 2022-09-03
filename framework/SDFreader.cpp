@@ -21,6 +21,7 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
     std::string filename;
     unsigned x_res = 0;
     unsigned y_res = 0;
+    unsigned sample_width = 1;
     ///////////////////////////
 
     std::shared_ptr<Renderer> rend = nullptr;
@@ -188,19 +189,25 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
 
             }
             else if ("a_light" == keyword) {
+                std::string name;
                 glm::vec3 pos{};
-                glm::vec3 v_vec{};
                 glm::vec3 u_vec{};
-                unsigned v_steps = 0;
+                glm::vec3 v_vec{};
                 unsigned u_steps = 0;
+                unsigned v_steps = 0;
+                Color col{};
+                float brightness = 0.0f;
 
+                iss >> name;
                 iss >> pos.x >> pos.y >> pos.z;
-                iss >> v_steps;
                 iss >> u_steps;
-                iss >> v_vec.x >> v_vec.y >> v_vec.z;
+                iss >> v_steps;
                 iss >> u_vec.x >> u_vec.y >> u_vec.z;
+                iss >> v_vec.x >> v_vec.y >> v_vec.z;
+                iss >> col.r >> col.g >> col.b;
+                iss >> brightness;
 
-                area_lights.push_back(std::make_shared<Area_Light>(Area_Light{ pos,v_vec,u_vec,v_steps,u_steps}));
+                area_lights.push_back(std::make_shared<Area_Light>(Area_Light{name, pos, u_vec, v_vec, u_steps, v_steps, col, brightness}));
             }
             else if ("camera" == keyword) {
                 //camera <name> <fov-x> (<eye> <dir> <up>)
@@ -240,6 +247,12 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
                 shape->set_scaling(scale);
             }
         }
+        else if ("set" == keyword) {
+            iss >> keyword;
+            if ("samples" == keyword) {
+                iss >> sample_width;
+            }
+        }
         else if ("render" == keyword) {
             //render <cam-name> <filename> <x-res> <y-res> //Cameraname ?
             iss >> cam_name >> filename >> x_res >> y_res;
@@ -255,7 +268,7 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
     }
     root->prepare_for_rendering();
     Scene s{ root, cameras, lights, area_lights, ambient };
-    rend = std::make_shared<Renderer>(Renderer{ x_res,y_res,filename,*find(cameras,cam_name),s});
+    rend = std::make_shared<Renderer>(Renderer{ x_res, y_res, filename, *find(cameras,cam_name), sample_width, s });
     sdf_filestream.close();
     return rend;
 }

@@ -25,7 +25,7 @@
 class Renderer
 {
 public:
-    Renderer(unsigned w, unsigned h, std::string const& file, Camera const& cam,Scene const& sce);
+    Renderer(unsigned w, unsigned h, std::string const& file, Camera const& cam, unsigned sample_width, Scene const& sce);
     void render();
     
     inline std::vector<Color> const& color_buffer() const
@@ -53,6 +53,7 @@ private:
     std::string filename_;
     PpmWriter ppm_;
     Camera camera_;
+    unsigned int sample_width_;
     Scene scene_;
 };
 
