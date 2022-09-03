@@ -111,25 +111,23 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth) co
     pixel_color = Color{ scene_.ambient_ * hitpoint.mat->ka_ };
 
     for (auto const& light : scene_.lights_) {
-        float obstructed = 1;//anderer name
-
         glm::vec3 offset_hitpoint = hitpoint.point3d + hitpoint.normal * epsilon;//infinit loop when ray is parallel to box ?
         Ray secondary_ray {offset_hitpoint, glm::normalize(light->position_ - offset_hitpoint)};
-        float ob = cast_shadow(secondary_ray,light->position_);
+        float light_amount = cast_shadow(secondary_ray,light->position_);
     
-        if (ob > 0) {
+        if (light_amount > 0) {
             // light falloff via inverse square law
             float dist = glm::distance(offset_hitpoint, light->position_);
             float light_intensity = light->brightness_ / (dist * dist);
             //diffuse
             glm::vec3 normal_object_hit_n{ hitpoint.normal };
             float cos_omega = glm::dot(normal_object_hit_n, secondary_ray.direction);
-            pixel_color += light->color_ * light_intensity * hitpoint.mat->kd_ * std::max(cos_omega,0.0f) * ob;
+            pixel_color += light->color_ * light_intensity * hitpoint.mat->kd_ * std::max(cos_omega,0.0f) * light_amount;
             
             //specular 
             glm::vec3 reflected_i_n{ (-secondary_ray.direction) - (2 * glm::dot(-secondary_ray.direction,normal_object_hit_n) * normal_object_hit_n) };
             glm::vec3 vec_to_cam_n = -hitpoint.direction;
-            pixel_color += std::pow(std::max(glm::dot(reflected_i_n, vec_to_cam_n), 0.0f), hitpoint.mat->m_) * hitpoint.mat->ks_ * light->brightness_ * light->color_ * ob;
+            pixel_color += std::pow(std::max(glm::dot(reflected_i_n, vec_to_cam_n), 0.0f), hitpoint.mat->m_) * hitpoint.mat->ks_ * light_intensity * light->color_ * light_amount;
         }
     }
     for (auto const& light : scene_.a_lights_) {
@@ -140,18 +138,20 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth) co
                 glm::vec3 offset_hitpoint = hitpoint.point3d + hitpoint.normal * epsilon;//infinit loop when ray is parallel to box ?
                 Ray secondary_ray{ offset_hitpoint, glm::normalize(point - offset_hitpoint) };
 
-                float ob = cast_shadow(secondary_ray,point);
+                float light_amount = cast_shadow(secondary_ray,point);
 
-                if (ob > 0) {
+                if (light_amount > 0) {
+                    float dist = glm::distance(offset_hitpoint, point);
+                    float light_intensity = light->brightness_ / (dist * dist);
                     //diffuse
                     glm::vec3 normal_object_hit_n{ hitpoint.normal };
                     float cos_omega = glm::dot(normal_object_hit_n, secondary_ray.direction);
-                    px += light->color_ * light->brightness_ * hitpoint.mat->kd_ * std::max(cos_omega, 0.0f) * ob;
+                    px += light->color_ * light_intensity * hitpoint.mat->kd_ * std::max(cos_omega, 0.0f) * light_amount;
 
                     //specular 
                     glm::vec3 reflected_i_n{ (-secondary_ray.direction) - (2 * glm::dot(-secondary_ray.direction,normal_object_hit_n) * normal_object_hit_n) };
                     glm::vec3 vec_to_cam_n = -hitpoint.direction;
-                    px += std::pow(std::max(glm::dot(reflected_i_n, vec_to_cam_n), 0.0f), hitpoint.mat->m_) * hitpoint.mat->ks_ * light->brightness_ * light->color_ * ob;
+                    px += std::pow(std::max(glm::dot(reflected_i_n, vec_to_cam_n), 0.0f), hitpoint.mat->m_) * hitpoint.mat->ks_ * light_intensity * light->color_ * light_amount;
                 }
             }
         }
@@ -260,18 +260,19 @@ void Renderer::write(Pixel const& p){
 
 float Renderer::cast_shadow(Ray const& secondary_ray,glm::vec3 const& light_pos) const {
     Ray s_r{ secondary_ray };
-    float obstructed = 1.0f;
+    float light_amount = 1.0f;
     Hitpoint hitp;
-    std::string obj_hit = "";
     do {
         hitp = scene_.root_->intersect(s_r);
-        if (!hitp.hit || hitp.t >= glm::length(light_pos - s_r.origin) || floating_equal( obstructed ,0.0f))break;
-        if (obj_hit != hitp.name)
-            obstructed -= hitp.mat->opacity_;
-        obj_hit = hitp.name;
+        if (!hitp.hit || hitp.t >= glm::length(light_pos - s_r.origin))
+            break;
+        
+        light_amount -= hitp.mat->opacity_;
+
+        if (light_amount <= 0.0f) 
+            return 0.0f;
 
         s_r.origin = hitp.point3d + secondary_ray.direction * epsilon;
-
     } while (hitp.hit);//bisschen weird
-    return obstructed;
+    return light_amount;
 }
