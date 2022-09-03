@@ -51,6 +51,9 @@ void Renderer::ray_thread(std::atomic<int>& i) {
     float d = sin((camera_.fov_x_ / 2.0f) * (M_PI / 180.0f));
     float distance = ((float)width_ / 2.0f) / d;
 
+    glm::mat4 view = glm::lookAt(camera_.position_, camera_.position_ + camera_.front_, camera_.up_);
+    glm::mat4 inv_view = glm::inverse(view);
+
     while (i < (height_ - 1) * (width_ - 1)) {
         int j = i++;
         //for (unsigned int i = 0; i < height_ * width_; ++i) {// -1
@@ -71,9 +74,6 @@ void Renderer::ray_thread(std::atomic<int>& i) {
                 float screen_y = (float)y - ((float)height_ / 2.0f) + ((float) y_anti_aliasing / (float) (1 + sample_width_));
 
                 Ray prim_ray{ glm::vec3{0.0f, 0.0f, 0.0f}, glm::normalize(glm::vec3{screen_x, screen_y, -distance}) };
-
-                glm::mat4 view = glm::lookAt(camera_.position_, camera_.position_ + camera_.front_, camera_.up_);
-                glm::mat4 inv_view = glm::inverse(view);
 
                 prim_ray.origin = glm::vec3( inv_view * glm::vec4(prim_ray.origin, 1.0f) );
                 prim_ray.direction = glm::vec3(inv_view * glm::vec4(prim_ray.direction, 0.0f));
