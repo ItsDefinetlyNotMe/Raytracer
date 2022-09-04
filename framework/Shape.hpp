@@ -41,10 +41,11 @@ public:
 	void set_translation(Translation const& translation);
 	void set_rotation(Rotation const& rot);
 	void set_scaling(Scaling const& scale);
+	void update_scaling(float scale);
 
 	void set_bounding_box(Bounding_Box const& bounding_box);
 
-	void update_model_matrix(glm::mat4 const& parent_mat);
+	void update_model_matrix(glm::mat4 const& parent_mat, float parent_scale);
 
 	glm::vec3 obj_to_world_position(glm::vec3 const& position) const;
 	glm::vec3 obj_to_world_direction(glm::vec3 const& direction) const;
@@ -57,7 +58,7 @@ public:
 	virtual Hitpoint intersect(Ray const& ray) const = 0;
 	virtual glm::vec3 normal(glm::vec3 const& point) const = 0;
 	virtual void create_bounding_box() = 0;
-	virtual void prepare_for_rendering(glm::mat4 const& parent_world_mat = glm::mat4(1.0f)) = 0;
+	virtual void prepare_for_rendering(glm::mat4 const& parent_world_mat, float parent_scale = 1.0f) = 0;
 };
 std::ostream& operator<<(std::ostream& os, Shape const& s);
 #endif // ! SHAPE_HPP

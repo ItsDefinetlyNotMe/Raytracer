@@ -12,49 +12,57 @@ Hitpoint Cylinder::intersect(Ray const& ray) const {
 
 	Ray obj_ray = { world_to_obj_position(ray.origin), world_to_obj_direction(ray.direction) };
 	
-	// transform obj_ray, so that bottom would be at (0, 0, 0)
-	obj_ray.origin = obj_ray.origin - bottom_;
+	Hitpoint point{};
+	float disb = ((bottom_.y - obj_ray.origin.y) / obj_ray.direction.y);
+	float world_disb = disb * Shape::get_scale();
+	glm::vec3 pb = obj_ray.origin + disb * obj_ray.direction;
 
-	// solve in 2d as circle
-	float a = obj_ray.direction.x * obj_ray.direction.x + obj_ray.direction.z * obj_ray.direction.z;
-	float b = 2 * (obj_ray.origin.x * obj_ray.direction.x + obj_ray.origin.z * obj_ray.direction.z);
-	float c = obj_ray.origin.x * obj_ray.origin.x + obj_ray.origin.z * obj_ray.origin.z - radius_ * radius_;
+	float dist = ((bottom_.y + height_ - obj_ray.origin.y) / obj_ray.direction.y);
+	float world_dist = dist * Shape::get_scale();
+	glm::vec3 pt = obj_ray.origin + dist * obj_ray.direction;
+	
 
-	if (b*b - 4 * a * c < 0) return Hitpoint{};
-
-	float t1 = (-b - sqrtf(b*b - 4 * a * c)) / (2 * a);
-	float t2 = (-b + sqrtf(b*b - 4 * a * c)) / (2 * a);
-
-	float t;
-	if (t2 < t1) {
-		float temp = t1;
-		t1 = t2;
-		t2 = temp;
+	if (glm::length(pt - glm::vec3{bottom_.x, bottom_.y + height_, bottom_.z}) <= radius_) {
+		if (world_dist < point.t && world_dist >= 0)
+			point = Hitpoint{ true, world_dist,Shape::get_name(),Shape::get_material(), Shape::obj_to_world_position(pt) ,ray.direction, obj_to_world_position(pt) };
+	} 
+	if (glm::length(pb - bottom_) <= radius_) {
+		if (world_disb < point.t && world_disb >= 0)
+			point = Hitpoint{ true, world_disb ,Shape::get_name(),Shape::get_material(),Shape::obj_to_world_position(pb) ,ray.direction, obj_to_world_position(pt) };
 	}
-	if (t1 >= 0.0f) t = t1;
-	else if (t2 >= 0.0f) t = t2;
-	else return Hitpoint{};
+	
+	//2d as circle
+	glm::vec2 ray_dir_2d{ obj_ray.direction.x,obj_ray.direction.z };
+	ray_dir_2d = glm::normalize(ray_dir_2d);
+	glm::vec2 U{ (bottom_ - obj_ray.origin).x,(bottom_ - obj_ray.origin).z };
+	glm::vec2 U1 = glm::dot(U, ray_dir_2d) * ray_dir_2d;
+	glm::vec2 U2{ U - U1 };
 
-	// check if inside y-range
+	float d = glm::length(U2);
+	if (d > radius_)
+		return Hitpoint{};
+
+	float m = sqrt(radius_ * radius_ - d * d);
+	glm::vec2 p2 = glm::vec2{ obj_ray.origin.x,obj_ray.origin.z } + U1 + m * ray_dir_2d;
+	glm::vec2 p1 = glm::vec2{ obj_ray.origin.x,obj_ray.origin.z } + U1 - m * ray_dir_2d;
+	//
+	float t2 =  (p2.x - obj_ray.origin.x) / obj_ray.direction.x;
+	float t1 = (p1.x - obj_ray.origin.x) / obj_ray.direction.x;
+
+	float t = t2;
+	if (t1 < t2 && t1 >= 0 || t2 < 0)
+		t = t1;
+
 	glm::vec3 point_hit = obj_ray.origin + obj_ray.direction * t;
-	if (point_hit.y <= height_ && point_hit.y >= 0.0f) {
+	if (point_hit.y <= bottom_.y + height_ && point_hit.y >= bottom_.y){
 		float world_t = t * Shape::get_scale();
 		glm::vec3 world_point_hit{ ray.origin + ray.direction * world_t };
-		return Hitpoint{ true, world_t ,Shape::get_name(),Shape::get_material(), world_point_hit,ray.direction, normal(world_point_hit)};
-	} else {
-		// origin.y + direction.y * t = height/0
-		float t3 = -obj_ray.origin.y / obj_ray.direction.y;
-		float t4 = (height_ - obj_ray.origin.y) / obj_ray.direction.y;
-		if (t3 < t4 && t3 > 0.0f && t3 > t1 && t3 < t2) t = t3;
-		else if (t4 > 0.0f && t4 > t1 && t4 < t2) t = t4;
-		else return Hitpoint{};
-		
-		float world_t = t * Shape::get_scale();
-		glm::vec3 world_point_hit{ ray.origin + ray.direction * world_t };
-		return Hitpoint{ true, world_t ,Shape::get_name(),Shape::get_material(), world_point_hit,ray.direction, normal(world_point_hit)};
+		if(world_t < point.t && point.t > 0 )
+			point = Hitpoint{ true, world_t ,Shape::get_name(),Shape::get_material(), world_point_hit,ray.direction, normal(world_point_hit) };
 	}
-	return Hitpoint{};
+	return point;
 }
+
 
 glm::vec3 Cylinder::normal(glm::vec3 const& point) const {
 	glm::vec3 obj_point = Shape::world_to_obj_position(point);
@@ -103,9 +111,9 @@ void Cylinder::create_bounding_box() {
 	Shape::set_bounding_box(bb);
 }
 
-void Cylinder::prepare_for_rendering(glm::mat4 const& parent_world_mat) {
+void Cylinder::prepare_for_rendering(glm::mat4 const& parent_world_mat, float parent_scale) {
 	// turn local model matrix into global model matrix
-	Shape::update_model_matrix(parent_world_mat);
+	Shape::update_model_matrix(parent_world_mat, parent_scale);
 
 	// create bounding boxes in global world;
 	create_bounding_box();

@@ -44,9 +44,9 @@ void Sphere::create_bounding_box() {
 }
 
 
-void Sphere::prepare_for_rendering(glm::mat4 const& parent_world_mat) {
+void Sphere::prepare_for_rendering(glm::mat4 const& parent_world_mat, float parent_scale) {
 	// turn local model matrix into global model matrix
-	Shape::update_model_matrix(parent_world_mat);
+	Shape::update_model_matrix(parent_world_mat, parent_scale);
 
 	// create bounding boxes in global world;
 	create_bounding_box();

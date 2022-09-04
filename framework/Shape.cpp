@@ -27,24 +27,28 @@ Bounding_Box Shape::get_bounding_box() const {
 
 void Shape::set_translation(Translation const& translation) {
 	translation_ = translation;
-	update_model_matrix(glm::mat4(1.0f));
+	update_model_matrix(glm::mat4(1.0f), 1.0f);
 }
 
 void Shape::set_rotation(Rotation const& rot) {
 	rotations_.push_back(rot);
-	update_model_matrix(glm::mat4(1.0f));
+	update_model_matrix(glm::mat4(1.0f), 1.0f);
 }
 
 void Shape::set_scaling(Scaling const& scale) {
-	scale_ = scale;
-	update_model_matrix(glm::mat4(1.0f));
+	scale_.scale = scale.scale;
+	update_model_matrix(glm::mat4(1.0f), 1.0f);
+}
+
+void Shape::update_scaling(float scale) {
+	scale_.scale *= scale; 
 }
 
 void Shape::set_bounding_box(Bounding_Box const& bounding_box) {
 	bounding_box_ = bounding_box;
 }
 
-void Shape::update_model_matrix(glm::mat4 const& parent_mat) {
+void Shape::update_model_matrix(glm::mat4 const& parent_mat, float parent_scale) {
 	glm::mat4 translation_mat = glm::translate(glm::mat4(), translation_.translate);
 	
 	glm::mat4 rotation_mat = glm::mat4(1.0f);
@@ -62,6 +66,8 @@ void Shape::update_model_matrix(glm::mat4 const& parent_mat) {
 
 	model_ = parent_mat * translation_mat * rotation_mat * scale_mat;
 	inv_model_ = glm::inverse(model_);
+
+	update_scaling(parent_scale);
 }
 
 glm::vec3 Shape::obj_to_world_position(glm::vec3 const& position) const{

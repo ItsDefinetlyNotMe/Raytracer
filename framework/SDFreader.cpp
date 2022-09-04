@@ -266,7 +266,7 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
         std::cout<<"No root node"<<std::endl;
         exit(-1);
     }
-    root->prepare_for_rendering();
+    root->prepare_for_rendering(glm::mat4(1.0f));
     Scene s{ root, cameras, lights, area_lights, ambient };
     rend = std::make_shared<Renderer>(Renderer{ x_res, y_res, filename, *find(cameras,cam_name), sample_width, s });
     sdf_filestream.close();

@@ -17,7 +17,7 @@ public:
 	Hitpoint intersect(Ray const& ray) const override;
 	glm::vec3 normal(glm::vec3 const& point) const override;
 	void create_bounding_box() override;
-	void prepare_for_rendering(glm::mat4 const& parent_world_mat) override;
+	void prepare_for_rendering(glm::mat4 const& parent_world_mat, float parent_float) override;
 };
 
 #endif // CONE_HPP

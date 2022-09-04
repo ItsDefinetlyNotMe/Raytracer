@@ -37,14 +37,14 @@ void Composite::create_bounding_box() {
     Shape::set_bounding_box(bb);
 }
 
-void Composite::prepare_for_rendering(glm::mat4 const& parent_world_mat) {
+void Composite::prepare_for_rendering(glm::mat4 const& parent_world_mat, float parent_scale) {
 	// turn local model matrix into global model matrix
-	Shape::update_model_matrix(parent_world_mat);
+	Shape::update_model_matrix(parent_world_mat, parent_scale);
 
     glm::mat4 model_mat = Shape::get_model_matrix();
 
     for (auto const& child : children_) {
-        child->prepare_for_rendering(model_mat);
+        child->prepare_for_rendering(model_mat, parent_scale * get_scale());
     }
 
 	// create bounding boxes in global world;
