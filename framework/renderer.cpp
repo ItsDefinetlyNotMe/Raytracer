@@ -54,8 +54,9 @@ void Renderer::ray_thread(std::atomic<int>& i) {
     glm::mat4 view = glm::lookAt(camera_.position_, camera_.position_ + camera_.front_, camera_.up_);
     glm::mat4 inv_view = glm::inverse(view);
 
-    while (i < (height_ - 1) * (width_ - 1)) {
+    while (i < color_buffer_.size()) {
         int j = i++;
+        if (j >= color_buffer_.size()) return;
         //for (unsigned int i = 0; i < height_ * width_; ++i) {// -1
         unsigned int x = j % width_;
         unsigned int y = j / width_;
