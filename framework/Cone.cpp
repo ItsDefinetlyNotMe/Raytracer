@@ -10,56 +10,52 @@ Hitpoint Cone::intersect(Ray const& ray) const {
 	if (!Shape::intersect_bounding_box(ray)) return Hitpoint{};
 
 	Ray obj_ray = { world_to_obj_position(ray.origin), world_to_obj_direction(ray.direction) };
-	
-	// cone is defined as x^2+y^2=z^2 , so we need a slope
-	float slope = radius_ / height_;
 
-	// we need to offset the cone origin to (0, 0, 0)
-	obj_ray.origin = obj_ray.origin - bottom_ - glm::vec3{0, height_, 0};
+	Hitpoint point{};
+	float disb = ((bottom_.y - obj_ray.origin.y) / obj_ray.direction.y);//bottom.z = obj_ray-origin.z + disb * obj_ray.direction.z
+	float world_disb = disb * Shape::get_scale();
+	glm::vec3 pb = obj_ray.origin + disb * obj_ray.direction;
 
-	// solve as unit cone
-	float a = obj_ray.direction.x * obj_ray.direction.x + 
-			  obj_ray.direction.z * obj_ray.direction.z -
-			  obj_ray.direction.y * obj_ray.direction.y * slope * slope;
-
-	float b = 2 * (obj_ray.origin.x * obj_ray.direction.x + 
-				   obj_ray.origin.z * obj_ray.direction.z -
-				   obj_ray.origin.y * obj_ray.direction.y * slope * slope);
-
-	float c = obj_ray.origin.x * obj_ray.origin.x + 
-			  obj_ray.origin.z * obj_ray.origin.z - 
-			  obj_ray.origin.y * obj_ray.origin.y * slope * slope;
-
-	float t1 = (-b - sqrtf(b*b - 4 * a * c)) / (2 * a);
-	float t2 = (-b + sqrtf(b*b - 4 * a * c)) / (2 * a);
-
-	float t;
-	if (t2 < t1) {
-		float temp = t1;
-		t1 = t2;
-		t2 = temp;
+	if (glm::length(pb - bottom_) <= radius_) {
+		if (world_disb >= 0.0f)
+				point =  { true, world_disb ,Shape::get_name(),Shape::get_material(),Shape::obj_to_world_position(pb) ,ray.direction, normal(obj_to_world_position(pb)) };
 	}
-	if (t1 >= 0.0f) t = t1;
-	else if (t2 >= 0.0f) t = t2;
-	else return Hitpoint{};
+	//
+	glm::vec3 h_dach{ glm::vec3{0.0f,bottom_.y - height_, 0.0f} / abs(bottom_.y - height_) };
+	glm::vec3 w{ obj_ray.origin - glm::vec3{bottom_.x,bottom_.y + height_,bottom_.z} };
+	float m = (radius_*radius_)/(height_*height_) + 1.0f;
 
-	// check if inside y-range
-	glm::vec3 point_hit = obj_ray.origin + obj_ray.direction * t;
-	if (point_hit.y <= 0.0f && point_hit.y >= -height_) {
-		float world_t = t * Shape::get_scale();
-		glm::vec3 world_point_hit{ ray.origin + ray.direction * world_t };
-		return Hitpoint{ true, world_t ,Shape::get_name(),Shape::get_material(), world_point_hit,ray.direction, normal(world_point_hit)};
-	} else {
-		float t3 = -obj_ray.origin.y / obj_ray.direction.y;
-		float t4 = (-height_ - obj_ray.origin.y) / obj_ray.direction.y;
-		if (t3 < t4 && t3 > 0.0f && t3 > t1 && t3 < t2) t = t3;
-		else if (t4 > 0.0f && t4 > t1 && t4 < t2) t = t4;
-		else return Hitpoint{};
-		
-		float world_t = t * Shape::get_scale();
-		glm::vec3 world_point_hit{ ray.origin + ray.direction * world_t };
-		return Hitpoint{ true, world_t ,Shape::get_name(),Shape::get_material(), world_point_hit,ray.direction, normal(world_point_hit)};
+	// float a = glm::dot(obj_ray.direction, obj_ray.direction) 
+	// 		- m * pow(glm::dot(obj_ray.direction, h_dach), 2) 
+	// 		- pow(glm::dot(obj_ray.direction, h_dach), 2);
+	float a = glm::dot(obj_ray.direction, obj_ray.direction) 
+			- m * obj_ray.direction.y * h_dach.y  * obj_ray.direction.y * h_dach.y;
+	float b = 2 * (glm::dot(obj_ray.direction, w) 
+				   - m * glm::dot(obj_ray.direction, h_dach) * w.y * h_dach.y);
+	float c = glm::dot(w, w) 
+			- m * w.y * w.y * h_dach.y * h_dach.y;
+
+	if (b * b - 4 * a * c < 0)
+		return Hitpoint{};
+	float t1 = (-b + sqrt(b*b -4 * a * c)) / (2 * a);
+	float t2 = (-b - sqrt(b * b - 4 * a * c)) / (2 * a);
+
+	if (t1 <= t2 && t1 > 0) {
+
+		if (t1 * Shape::get_scale() < point.t) {
+			if ((obj_ray.origin + t1 * obj_ray.direction).y > bottom_.y && (obj_ray.origin + t1 * obj_ray.direction).y <= bottom_.y + height_)
+				point = { true, t1 * Shape::get_scale() ,Shape::get_name(),Shape::get_material(),Shape::obj_to_world_position(obj_ray.origin + t1 * obj_ray.direction) ,ray.direction, normal(obj_to_world_position(obj_ray.origin + t1 * obj_ray.direction)) };
+		}
 	}
+	if (t2 <= t1 && t2 > 0) {
+
+		if (t2 * Shape::get_scale() < point.t) {
+			if ((obj_ray.origin + t2 * obj_ray.direction).y > bottom_.y && (obj_ray.origin + t2 * obj_ray.direction).y <= bottom_.y + height_)
+				point = { true, t2 * Shape::get_scale() ,Shape::get_name(),Shape::get_material(),Shape::obj_to_world_position(obj_ray.origin + t2 * obj_ray.direction) ,ray.direction, normal(obj_to_world_position(obj_ray.origin + t2 * obj_ray.direction)) };
+		}
+	}
+
+	return point;
 }
 
 glm::vec3 Cone::normal(glm::vec3 const& point) const {
