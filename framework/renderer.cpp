@@ -114,9 +114,10 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth) co
     for (auto const& light : scene_.lights_) {
         glm::vec3 offset_hitpoint = hitpoint.point3d + hitpoint.normal * epsilon;//infinit loop when ray is parallel to box ?
         Ray secondary_ray {offset_hitpoint, glm::normalize(light->position_ - offset_hitpoint)};
-        float light_amount = cast_shadow(secondary_ray,light->position_);
+        // float light_amount = cast_shadow(secondary_ray,light->position_);
+        glm::vec3 light_amount = cast_shadow(secondary_ray,light->position_);
     
-        if (light_amount > 0) {
+        if (glm::length(light_amount) > 0.0f) {
             // light falloff via inverse square law
             float dist = glm::distance(offset_hitpoint, light->position_);
             float light_intensity = light->brightness_ / (dist * dist);
@@ -139,9 +140,9 @@ Color Renderer::trace_secondary(Hitpoint const& hitpoint, unsigned int depth) co
                 glm::vec3 offset_hitpoint = hitpoint.point3d + hitpoint.normal * epsilon;//infinit loop when ray is parallel to box ?
                 Ray secondary_ray{ offset_hitpoint, glm::normalize(point - offset_hitpoint) };
 
-                float light_amount = cast_shadow(secondary_ray,point);
-
-                if (light_amount > 0) {
+                glm::vec3 light_amount = cast_shadow(secondary_ray,point);
+    
+                if (glm::length(light_amount) > 0.0f) {
                     float dist = glm::distance(offset_hitpoint, point);
                     float light_intensity = light->brightness_ / (dist * dist);
                     //diffuse
@@ -259,19 +260,42 @@ void Renderer::write(Pixel const& p){
     ppm_.write(p);
 }
 
-float Renderer::cast_shadow(Ray const& secondary_ray,glm::vec3 const& light_pos) const {
+// float Renderer::cast_shadow(Ray const& secondary_ray,glm::vec3 const& light_pos) const {
+//     Ray s_r{ secondary_ray };
+//     float light_amount = 1.0f;
+//     Hitpoint hitp;
+//     do {
+//         hitp = scene_.root_->intersect(s_r);
+//         if (!hitp.hit || hitp.t >= glm::length(light_pos - s_r.origin))
+//             break;
+        
+//         light_amount -= hitp.mat->opacity_;
+
+//         if (light_amount <= 0.0f) 
+//             return 0.0f;
+
+//         s_r.origin = hitp.point3d + secondary_ray.direction * epsilon;
+//     } while (hitp.hit);//bisschen weird
+//     return light_amount;
+// }
+
+glm::vec3 Renderer::cast_shadow(Ray const& secondary_ray,glm::vec3 const& light_pos) const {
     Ray s_r{ secondary_ray };
-    float light_amount = 1.0f;
+    glm::vec3 light_amount = glm::vec3(1.0f, 1.0f, 1.0f);
     Hitpoint hitp;
     do {
         hitp = scene_.root_->intersect(s_r);
         if (!hitp.hit || hitp.t >= glm::length(light_pos - s_r.origin))
             break;
         
-        light_amount -= hitp.mat->opacity_;
+        light_amount -= glm::vec3(1.0f,1.0f,1.0f) - (1.0f - hitp.mat->opacity_) * glm::vec3(hitp.mat->kd_.r,hitp.mat->kd_.g,hitp.mat->kd_.b);
 
-        if (light_amount <= 0.0f) 
-            return 0.0f;
+        if (light_amount.x < 0.0f) light_amount.x = 0.0f;
+        if (light_amount.y < 0.0f) light_amount.y = 0.0f;
+        if (light_amount.z < 0.0f) light_amount.z = 0.0f;
+
+        if (glm::length(light_amount) <= 0.0f) 
+            return glm::vec3(0.0f, 0.0f, 0.0f);
 
         s_r.origin = hitp.point3d + secondary_ray.direction * epsilon;
     } while (hitp.hit);//bisschen weird
