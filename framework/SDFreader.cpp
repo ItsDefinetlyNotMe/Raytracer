@@ -243,7 +243,12 @@ std::shared_ptr<Renderer> sdf_reader(std::string const& path ) {
             }
             else if ("scale" == keyword) {
                 Scaling scale;
-                iss >> scale.scale;
+                scale.scale = glm::vec3(0.0f, 0.0f, 0.0f);
+                iss >> scale.scale.x >> scale.scale.y >> scale.scale.z;
+                if ((scale.scale.y >= -0.0001f && scale.scale.y <= 0.0001f) || (scale.scale.z >= -0.0001f && scale.scale.z <= 0.0001f)) {
+                    scale.scale.y = scale.scale.x;
+                    scale.scale.z = scale.scale.x;
+                }
                 shape->set_scaling(scale);
             }
         }

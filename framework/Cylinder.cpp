@@ -14,21 +14,26 @@ Hitpoint Cylinder::intersect(Ray const& ray) const {
 	
 	Hitpoint point{};
 	float disb = ((bottom_.y - obj_ray.origin.y) / obj_ray.direction.y);
-	float world_disb = disb * Shape::get_scale();
 	glm::vec3 pb = obj_ray.origin + disb * obj_ray.direction;
 
 	float dist = ((bottom_.y + height_ - obj_ray.origin.y) / obj_ray.direction.y);
-	float world_dist = dist * Shape::get_scale();
 	glm::vec3 pt = obj_ray.origin + dist * obj_ray.direction;
 	
 
 	if (glm::length(pt - glm::vec3{bottom_.x, bottom_.y + height_, bottom_.z}) <= radius_) {
-		if (world_dist < point.t && world_dist >= 0)
-			point = Hitpoint{ true, world_dist,Shape::get_name(),Shape::get_material(), Shape::obj_to_world_position(pt) ,ray.direction, obj_to_world_position(pt) };
+		if (dist >= 0.0f) {
+			glm::vec3 world_hit = obj_to_world_position(pt);
+			float world_t = glm::distance(world_hit, ray.origin);
+			point = Hitpoint{ true, world_t,Shape::get_name(), Shape::get_material(), world_hit, ray.direction, normal(pt) };
+		}
 	} 
+
 	if (glm::length(pb - bottom_) <= radius_) {
-		if (world_disb < point.t && world_disb >= 0)
-			point = Hitpoint{ true, world_disb ,Shape::get_name(),Shape::get_material(),Shape::obj_to_world_position(pb) ,ray.direction, obj_to_world_position(pt) };
+		glm::vec3 world_hit = obj_to_world_position(pb);
+		float world_t = glm::distance(world_hit, ray.origin);
+		if ((disb < dist && disb >= 0.0f) || dist < 0.0f){
+			point = Hitpoint{ true, world_t,Shape::get_name(), Shape::get_material(), world_hit, ray.direction, normal(pb) };
+		}
 	}
 	
 	//2d as circle
@@ -53,29 +58,30 @@ Hitpoint Cylinder::intersect(Ray const& ray) const {
 	if (t1 < t2 && t1 >= 0 || t2 < 0)
 		t = t1;
 
-	glm::vec3 point_hit = obj_ray.origin + obj_ray.direction * t;
-	if (point_hit.y <= bottom_.y + height_ && point_hit.y >= bottom_.y){
-		float world_t = t * Shape::get_scale();
-		glm::vec3 world_point_hit{ ray.origin + ray.direction * world_t };
-		if(world_t < point.t && point.t > 0 )
-			point = Hitpoint{ true, world_t ,Shape::get_name(),Shape::get_material(), world_point_hit,ray.direction, normal(world_point_hit) };
+	if (t > 0.0f ) {
+		glm::vec3 point_hit = obj_ray.origin + t * obj_ray.direction;
+		if (point_hit.y <= bottom_.y + height_ && point_hit.y >= bottom_.y){
+			glm::vec3 world_hit = obj_to_world_position(point_hit);
+			float world_t = glm::distance(world_hit, ray.origin);
+			if(world_t < point.t)
+				point = Hitpoint{ true, world_t, Shape::get_name(), Shape::get_material(), world_hit, ray.direction, normal(point_hit) };
+		}
 	}
 	return point;
 }
 
 
 glm::vec3 Cylinder::normal(glm::vec3 const& point) const {
-	glm::vec3 obj_point = Shape::world_to_obj_position(point);
 	//oben/unten
-	if (floating_equal<float>(obj_point.y, bottom_.y)) {
-		return Shape::obj_to_world_direction(glm::vec3{0.0f, -1.0f, 0.0f});
+	if (floating_equal<float>(point.y, bottom_.y)) {
+		return Shape::obj_to_world_normal(glm::vec3{0.0f, -1.0f, 0.0f});
 	}
-	else if(floating_equal<float>(obj_point.y, bottom_.y + height_)) {
-		return Shape::obj_to_world_direction(glm::vec3{ 0.0f, 1.0f, 0.0f });
+	else if(floating_equal<float>(point.y, bottom_.y + height_)) {
+		return Shape::obj_to_world_normal(glm::vec3{ 0.0f, 1.0f, 0.0f });
 	}
 	//seite
-	glm::vec3 normal = glm::vec3{obj_point.x, 0.0f, obj_point.z} - glm::vec3{bottom_.x, 0.0f, bottom_.z};
-	return Shape::obj_to_world_direction(normal);
+	glm::vec3 normal = glm::vec3{point.x, 0.0f, point.z} - glm::vec3{bottom_.x, 0.0f, bottom_.z};
+	return Shape::obj_to_world_normal(normal);
 }
 
 void Cylinder::create_bounding_box() {
@@ -111,9 +117,9 @@ void Cylinder::create_bounding_box() {
 	Shape::set_bounding_box(bb);
 }
 
-void Cylinder::prepare_for_rendering(glm::mat4 const& parent_world_mat, float parent_scale) {
+void Cylinder::prepare_for_rendering(glm::mat4 const& parent_world_mat) {
 	// turn local model matrix into global model matrix
-	Shape::update_model_matrix(parent_world_mat, parent_scale);
+	Shape::update_model_matrix(parent_world_mat);
 
 	// create bounding boxes in global world;
 	create_bounding_box();

@@ -15,7 +15,7 @@ public:
 	Hitpoint intersect(Ray const& ray) const override;
 	inline glm::vec3 normal(glm::vec3 const& point) const override {return glm::vec3(0);};
     void create_bounding_box() override;
-	void prepare_for_rendering(glm::mat4 const& parent_world_mat, float parent_float) override;
+	void prepare_for_rendering(glm::mat4 const& parent_world_mat) override;
 };
 
 #endif // COMPOSITE_HPP

@@ -12,10 +12,10 @@ Hitpoint Triangle::intersect(Ray const& r) const {
 	glm::vec3 uvt; // wtf ??
 	Ray obj_ray = { world_to_obj_position(r.origin),world_to_obj_direction(r.direction) };
 	bool hit = glm::intersectRayTriangle(obj_ray.origin, obj_ray.direction, left_bottom_, right_bottom_, top_, uvt);
-	float world_t = uvt.z * Shape::get_scale();
-	glm::vec3 world_point_hit {r.origin + r.direction * world_t};
-	glm::vec3 norm = normal(world_point_hit);
-	return Hitpoint{hit,world_t,Shape::get_name(),Shape::get_material(), world_point_hit, r.direction, norm};
+	glm::vec3 point_hit = obj_ray.origin + uvt.z * obj_ray.direction;
+	glm::vec3 world_hit = obj_to_world_position(point_hit);
+	float world_t = glm::distance(world_hit, r.origin);
+	return Hitpoint{hit, world_t, Shape::get_name(), Shape::get_material(), world_hit, r.direction, normal(point_hit)};
 }
 
 glm::vec3 Triangle::normal(glm::vec3 const& point) const {
@@ -56,9 +56,9 @@ void Triangle::create_bounding_box() {
 	Shape::set_bounding_box(bb);
 }
 
-void Triangle::prepare_for_rendering(glm::mat4 const& parent_world_mat, float parent_scale) {
+void Triangle::prepare_for_rendering(glm::mat4 const& parent_world_mat) {
 	// turn local model matrix into global model matrix
-	Shape::update_model_matrix(parent_world_mat, parent_scale);
+	Shape::update_model_matrix(parent_world_mat);
 
 	// create bounding boxes in global world;
 	create_bounding_box();

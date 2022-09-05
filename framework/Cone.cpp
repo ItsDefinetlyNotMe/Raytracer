@@ -13,12 +13,14 @@ Hitpoint Cone::intersect(Ray const& ray) const {
 
 	Hitpoint point{};
 	float disb = ((bottom_.y - obj_ray.origin.y) / obj_ray.direction.y);//bottom.z = obj_ray-origin.z + disb * obj_ray.direction.z
-	float world_disb = disb * Shape::get_scale();
 	glm::vec3 pb = obj_ray.origin + disb * obj_ray.direction;
 
 	if (glm::length(pb - bottom_) <= radius_) {
-		if (world_disb >= 0.0f)
-				point =  { true, world_disb ,Shape::get_name(),Shape::get_material(),Shape::obj_to_world_position(pb) ,ray.direction, normal(obj_to_world_position(pb)) };
+		if (disb >= 0.0f) {
+			glm::vec3 world_hit = obj_to_world_position(pb);
+			float world_t = glm::distance(world_hit, ray.origin);
+			point =  { true, world_t, Shape::get_name(), Shape::get_material(), world_hit, ray.direction, normal(pb) };
+		}
 	}
 	//
 	glm::vec3 h_dach{ glm::vec3{0.0f,bottom_.y - height_, 0.0f} / abs(bottom_.y - height_) };
@@ -41,34 +43,36 @@ Hitpoint Cone::intersect(Ray const& ray) const {
 	float t2 = (-b - sqrt(b * b - 4 * a * c)) / (2 * a);
 
 	if (t1 <= t2 && t1 > 0) {
-
-		if (t1 * Shape::get_scale() < point.t) {
-			if ((obj_ray.origin + t1 * obj_ray.direction).y > bottom_.y && (obj_ray.origin + t1 * obj_ray.direction).y <= bottom_.y + height_)
-				point = { true, t1 * Shape::get_scale() ,Shape::get_name(),Shape::get_material(),Shape::obj_to_world_position(obj_ray.origin + t1 * obj_ray.direction) ,ray.direction, normal(obj_to_world_position(obj_ray.origin + t1 * obj_ray.direction)) };
+		glm::vec3 temp = obj_ray.origin + t1 * obj_ray.direction;
+		glm::vec3 world_hit = obj_to_world_position(temp);
+		float world_t = glm::distance(world_hit, ray.origin);
+		if (world_t < point.t) {
+			if (temp.y > bottom_.y && temp.y <= bottom_.y + height_)
+				point = { true, world_t, Shape::get_name(), Shape::get_material(), world_hit, ray.direction, normal(temp) };
 		}
 	}
 	if (t2 <= t1 && t2 > 0) {
-
-		if (t2 * Shape::get_scale() < point.t) {
-			if ((obj_ray.origin + t2 * obj_ray.direction).y > bottom_.y && (obj_ray.origin + t2 * obj_ray.direction).y <= bottom_.y + height_)
-				point = { true, t2 * Shape::get_scale() ,Shape::get_name(),Shape::get_material(),Shape::obj_to_world_position(obj_ray.origin + t2 * obj_ray.direction) ,ray.direction, normal(obj_to_world_position(obj_ray.origin + t2 * obj_ray.direction)) };
+		glm::vec3 temp = obj_ray.origin + t2 * obj_ray.direction;
+		glm::vec3 world_hit = obj_to_world_position(temp);
+		float world_t = glm::distance(world_hit, ray.origin);
+		if (world_t < point.t) {
+			if (temp.y > bottom_.y && temp.y <= bottom_.y + height_)
+				point = { true, world_t, Shape::get_name(), Shape::get_material(), world_hit, ray.direction, normal(temp) };
 		}
 	}
-
 	return point;
 }
 
 glm::vec3 Cone::normal(glm::vec3 const& point) const {
-	glm::vec3 obj_point = Shape::world_to_obj_position(point);
-	if (floating_equal<float>(obj_point.y, bottom_.y))
-		return obj_to_world_direction({ 0.0f, -1.0f, 0.0f });
-	glm::vec3 norm{ obj_point - bottom_ };
+	if (floating_equal<float>(point.y, bottom_.y))
+		return obj_to_world_normal({ 0.0f, -1.0f, 0.0f });
+	glm::vec3 norm{ point - bottom_ };
 	norm.y = 0.0f;
 	norm = glm::normalize(norm);
 	norm.x = norm.x * (height_ / radius_);
 	norm.z = norm.z * (height_ / radius_);
 	norm.y = radius_ / height_;
-	return obj_to_world_direction(norm);
+	return obj_to_world_normal(norm);
 }
 
 void Cone::create_bounding_box() {
@@ -104,9 +108,9 @@ void Cone::create_bounding_box() {
 	Shape::set_bounding_box(bb);
 }
 
-void Cone::prepare_for_rendering(glm::mat4 const& parent_world_mat, float parent_scale) {
+void Cone::prepare_for_rendering(glm::mat4 const& parent_world_mat) {
 	// turn local model matrix into global model matrix
-	Shape::update_model_matrix(parent_world_mat, parent_scale);
+	Shape::update_model_matrix(parent_world_mat);
 
 	// create bounding boxes in global world;
 	create_bounding_box();

@@ -28,57 +28,57 @@ Hitpoint Box::intersect(Ray const& ray) const {
 	if (obj_ray.direction.x < 0 != not_inside) {
 		float t = (min_.x - obj_ray.origin.x) / obj_ray.direction.x;
 		glm::vec3 temp{ obj_ray.origin + obj_ray.direction * t };
-		float world_t = t * Shape::get_scale();
-		glm::vec3 world_temp { ray.origin + ray.direction * world_t };
+		glm::vec3 world_hit = obj_to_world_position(temp);
+		float world_t = glm::distance(world_hit, ray.origin);
 		if ((temp.z > min_.z && temp.z < max_.z) && (temp.y > min_.y && temp.y < max_.y) && t >= 0) {
-			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction, normal(world_temp) };
+			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_hit,ray.direction, normal(temp) };
 		}
 	}
 	else if (obj_ray.direction.x > 0 != not_inside) {
 		float t = (max_.x - obj_ray.origin.x) / obj_ray.direction.x;
 		glm::vec3 temp{ obj_ray.origin + obj_ray.direction * t };
-		float world_t = t * Shape::get_scale();
-		glm::vec3 world_temp { ray.origin + ray.direction * world_t };
+		glm::vec3 world_hit = obj_to_world_position(temp);
+		float world_t = glm::distance(world_hit, ray.origin);
 		if ((temp.z > min_.z && temp.z < max_.z) && (temp.y > min_.y && temp.y < max_.y) && t >= 0) {
-			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction, normal(world_temp) };
+			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_hit,ray.direction, normal(temp) };
 		}
 	}
 
 	if (obj_ray.direction.y < 0 != not_inside) {
 		float t = (min_.y - obj_ray.origin.y) / obj_ray.direction.y;
 		glm::vec3 temp{ obj_ray.origin + obj_ray.direction * t };
-		float world_t = t * Shape::get_scale();
-		glm::vec3 world_temp { ray.origin + ray.direction * world_t };
+		glm::vec3 world_hit = obj_to_world_position(temp);
+		float world_t = glm::distance(world_hit, ray.origin);
 		if ((temp.z > min_.z && temp.z < max_.z) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction, normal(world_temp) };
+			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_hit,ray.direction, normal(temp) };
 		}
 	}
 	else if (obj_ray.direction.y > 0 != not_inside) {
 		float t = (max_.y - obj_ray.origin.y) / obj_ray.direction.y;
 		glm::vec3 temp{ obj_ray.origin + obj_ray.direction * t };
-		float world_t = t * Shape::get_scale();
-		glm::vec3 world_temp { ray.origin + ray.direction * world_t };
+		glm::vec3 world_hit = obj_to_world_position(temp);
+		float world_t = glm::distance(world_hit, ray.origin);
 		if ((temp.z > min_.z && temp.z < max_.z) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction, normal(world_temp) };
+			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_hit,ray.direction, normal(temp) };
 		}
 	}
 
 	if (obj_ray.direction.z < 0 != not_inside) {
 		float t = (min_.z - obj_ray.origin.z) / obj_ray.direction.z;
 		glm::vec3 temp{ obj_ray.origin + obj_ray.direction * t };
-		float world_t = t * Shape::get_scale();
-		glm::vec3 world_temp { ray.origin + ray.direction * world_t };
+		glm::vec3 world_hit = obj_to_world_position(temp);
+		float world_t = glm::distance(world_hit, ray.origin);
 		if ((temp.y > min_.y && temp.y < max_.y) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction, normal(world_temp) };
+			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_hit,ray.direction, normal(temp) };
 		}
 	}
 	else if (obj_ray.direction.z > 0 != not_inside) {
 		float t = (max_.z - obj_ray.origin.z) / obj_ray.direction.z;
 		glm::vec3 temp{ obj_ray.origin + obj_ray.direction * t };
-		float world_t = t * Shape::get_scale();
-		glm::vec3 world_temp { ray.origin + ray.direction * world_t };
+		glm::vec3 world_hit = obj_to_world_position(temp);
+		float world_t = glm::distance(world_hit, ray.origin);
 		if ((temp.y > min_.y && temp.y < max_.y) && (temp.x > min_.x && temp.x < max_.x) && t >= 0) {
-			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_temp,ray.direction, normal(world_temp) };
+			return  Hitpoint{ true, world_t,Shape::get_name(),Shape::get_material(), world_hit,ray.direction, normal(temp) };
 		}
 	}
 	return Hitpoint{};
@@ -88,25 +88,23 @@ glm::vec3 Box::normal(glm::vec3 const& point) const {
 	//!!Assumption point is on the box surface
 	//! FLOATS
 
-	glm::vec3 obj_point = Shape::world_to_obj_position(point);
+	if (floating_equal<float>(point.x, min_.x))
+		return obj_to_world_normal(glm::vec3 {-1,  0,  0});
 
-	if (floating_equal<float>(obj_point.x, min_.x))
-		return Shape::obj_to_world_direction(glm::vec3 {-1,  0,  0});
+	else if (floating_equal<float>(point.x,max_.x))
+		return obj_to_world_normal(glm::vec3 { 1,  0,  0});
 
-	else if (floating_equal<float>(obj_point.x,max_.x))
-		return Shape::obj_to_world_direction(glm::vec3 { 1,  0,  0});
+	else if (floating_equal<float>(point.y,min_.y))
+		return obj_to_world_normal(glm::vec3 { 0, -1,  0});
 
-	else if (floating_equal<float>(obj_point.y,min_.y))
-		return Shape::obj_to_world_direction(glm::vec3 { 0, -1,  0});
+	else if (floating_equal<float>(point.y,max_.y))
+		return obj_to_world_normal(glm::vec3 { 0,  1,  0});
 
-	else if (floating_equal<float>(obj_point.y,max_.y))
-		return Shape::obj_to_world_direction(glm::vec3 { 0,  1,  0});
+	else if (floating_equal<float>(point.z,min_.z))
+		return obj_to_world_normal(glm::vec3 { 0,  0, -1});
 
-	else if (floating_equal<float>(obj_point.z,min_.z))
-		return Shape::obj_to_world_direction(glm::vec3 { 0,  0, -1});
-
-	else if (floating_equal<float>(obj_point.z,max_.z))
-		return Shape::obj_to_world_direction(glm::vec3 { 0,  0,  1});
+	else if (floating_equal<float>(point.z,max_.z))
+		return obj_to_world_normal(glm::vec3 { 0,  0,  1});
 
 	return glm::vec3{};
 }
@@ -140,9 +138,9 @@ void Box::create_bounding_box() {
 	Shape::set_bounding_box(bb);
 }
 
-void Box::prepare_for_rendering(glm::mat4 const& parent_world_mat, float parent_scale) {
+void Box::prepare_for_rendering(glm::mat4 const& parent_world_mat) {
 	// turn local model matrix into global model matrix
-	Shape::update_model_matrix(parent_world_mat, parent_scale);
+	Shape::update_model_matrix(parent_world_mat);
 
 	// create bounding boxes in global world;
 	create_bounding_box();
